@@ -10,7 +10,7 @@
 #define __DistriSpectral__Task__
 
 #include <iostream>
-
+#include <cstring>
 #endif /* defined(__DistriSpectral__Task__) */
 
 
