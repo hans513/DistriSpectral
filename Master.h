@@ -10,22 +10,27 @@
 #define __DistriSpectral__Master__
 
 #include <iostream>
+#include <Eigen/Dense>
+#include "mpi.h"
 
 #endif /* defined(__DistriSpectral__Master__) */
 
+#ifndef __DistriSpectral__Task__
+#include "Task.h"
+#endif
+
 using namespace std;
+using namespace Eigen;
 
 class Master {
     
 public:
     
-    Master() {
-        
+    Master() {  
     }
     
-    void run() {
-        cout << "This is master";
-    }
+    void run();
+    void test();
     
 private:
     

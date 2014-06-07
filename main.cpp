@@ -93,7 +93,7 @@ int main( int argc, char *argv[] )
     int istart,iend,sum=0,psum=0,i;
     vector<double> buffer(BUF_SIZE);
     
-    MPI_Status Stat;
+
     
     
     /* Initialize the MPI execution environment */
@@ -132,28 +132,9 @@ int main( int argc, char *argv[] )
     /*In process1: block until you get data from root process*/
     
     else {
-        Slave* slave = new Slave();
+        Slave* slave = new Slave(myid);
         slave->run();
-        /*
-        int size[3];
-        cout << "Remote >> myid:" << myid << " Ready" << endl;
-        MPI_Recv(size, 3, MPI_INT, 0, 1, MPI_COMM_WORLD, &Stat);
-        //cout << "myid:" << myid << " check2" << endl;
-        MPI_Recv(&buffer[0], BUF_SIZE, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD, &Stat);
-    	cout << "Remote >> myid:" << myid << " Matrix received size:" << size[0]<< " , " << size[1] << endl;
-        MatrixXd matrix1 = Map<MatrixXd>(&buffer[0], size[0], size[1]);
-        
-        if(DBG) cout << endl <<"id: " << myid << endl << "receiveA" << endl << matrix1 << endl;
-        
-        MPI_Recv(size, 3, MPI_INT, 0, 1, MPI_COMM_WORLD, &Stat);
-        MPI_Recv(&buffer[0], BUF_SIZE, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD, &Stat);
-        MatrixXd matrix2 = Map<MatrixXd>(&buffer[0], size[0], size[1]);
-        
-        C = matrix1 * matrix2;
-        
-        cout << "Remote >> myid:" << myid << " Computation complete. Sending back result" << endl;
-        MPI_Send(C.data(), C.size(), MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
-         */
+
     }
     
     /* Terminate MPI execution environment */

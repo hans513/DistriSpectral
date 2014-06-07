@@ -10,24 +10,37 @@
 #define __DistriSpectral__Slave__
 
 #include <iostream>
+#include <Eigen/Dense>
+#include "mpi.h"
 
 #endif /* defined(__DistriSpectral__Slave__) */
 
+
+#ifndef __DistriSpectral__Task__
+#include "Task.h"
+#endif
+
+#define AROW 1000
+#define ACOL 1000
+#define BROW 1000
+#define BCOL 1000
+#define BUF_SIZE AROW*BCOL
+
 using namespace std;
+using namespace Eigen;
 
 class Slave {
     
 public:
     
-    Slave() {
+    Slave(int id): mId(id) {
         
     }
     
-    void run() {
-        cout << "This is slave";
-    }
+    void run();
     
 private:
     
+    int mId;
     
 };

@@ -5,7 +5,7 @@ ifeq ($(UNAME_S),Linux)
 	EIGEN=/home/hans/eigen
 endif
 ifeq ($(UNAME_S),Darwin)
-	EIGEN=/User/hans/eigen
+	EIGEN=/Users/hans/eigen
 endif
 
 
