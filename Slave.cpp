@@ -10,20 +10,51 @@
 
 
 void Slave::run() {
-    cout << "Remote >> myid:" << mId << " Ready" << endl;
+    cout << "Remote >> mId:" << mId << " Ready" << endl;
     
     //vector<double> buffer(BUF_SIZE);
+    char taskBuf[sizeof(Task)];
+    MPI_Status status;
     
-    //while (true) {
-        
-        char* taskBuf = new char[sizeof(Task)];
-        MPI_Status Stat;
-        
-        MPI_Recv(taskBuf, sizeof(Task), MPI_CHAR, 0, 1, MPI_COMM_WORLD, &Stat);
-        
+    
+    while (true) {
+
+        MPI_Recv(taskBuf, sizeof(Task), MPI_CHAR, 0, 1, MPI_COMM_WORLD, &status);
         Task* task = (Task*) taskBuf;
     
-        cout << endl <<"cmd:"<<task->cmd() <<"  size1:" << task->size()[1] << endl;
+        
+        switch (task->cmd()) {
+            
+            {case Task::TERMINATE:
+                cout << "Remote >> mId:" << mId << " TERMINATE!"<<endl;
+                exit (EXIT_SUCCESS);
+                break;
+            }
+                
+            {case Task::INITIAL:
+                
+                int dataSize;
+                MPI_Probe(MASTER_ID, 1, MPI_COMM_WORLD, &status);
+                MPI_Get_count(&status, MPI_DOUBLE, &dataSize);
+                vector<double> buffer(dataSize);
+                MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, MASTER_ID, 1, MPI_COMM_WORLD, &status);
+                MatrixXd matrix = Map<MatrixXd>(&buffer[0], task->size()[0], task->size()[1]);
+                
+                if (DBG) {
+                    cout << "Remote >> mId:" << mId << " Initial got:" << matrix <<endl;
+                }
+                
+                break;
+            }
+            
+            {case Task::TEST:
+                break;
+            }
+                
+            {default:
+                break;
+            }
+        }
     
        
         
@@ -48,5 +79,5 @@ void Slave::run() {
          MPI_Send(C.data(), C.size(), MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
         */
         
-    //}
+    }
 }

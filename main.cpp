@@ -94,22 +94,20 @@ int main( int argc, char *argv[] )
     vector<double> buffer(BUF_SIZE);
     
 
-    
-    
     /* Initialize the MPI execution environment */
     MPI_Init(&argc,&argv);
     
     /* Get the number of processes associated with communicator*/
-    MPI_Comm_size(MPI_COMM_WORLD,&numprocs);
+    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     
     /*Determines the rank of the calling process in the communicator */
-    MPI_Comm_rank(MPI_COMM_WORLD,&myid);
+    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     
     MatrixXd C;
     /* Send the data to only one in cluster*/
     if(myid==0) {
         
-        Master* master = new Master();
+        Master* master = new Master(numprocs);
         master->run();
         /*
 

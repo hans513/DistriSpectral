@@ -19,18 +19,18 @@ class Task {
     
 public:
     
-    static const int MULTIPLY = 1;
+    static const int TERMINATE = -1;
+    static const int INITIAL = 1;
+    static const int MULTIPLY = 10;
     static const int TEST = 99;
     
-    Task(int cmd, int* size): mCmd(cmd){
-        memcpy( mSize, size, sizeof(mSize));
+    Task(int cmd) {
+        Task(cmd, NULL);
     }
     
-    /*
-    long size() {
-        return mDAta.size()+ sizeof(int);
+    Task(int cmd, int* size): mCmd(cmd) {
+        if (size!=NULL) memcpy( mSize, size, sizeof(mSize));
     }
-     */
     
     int cmd() {
         return mCmd;

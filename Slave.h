@@ -11,6 +11,8 @@
 
 #include <iostream>
 #include <Eigen/Dense>
+#include <stdlib.h>
+#include <vector>
 #include "mpi.h"
 
 #endif /* defined(__DistriSpectral__Slave__) */
@@ -32,6 +34,9 @@ using namespace Eigen;
 class Slave {
     
 public:
+    
+    static const int MASTER_ID = 0;
+    static const int DBG = 1;
     
     Slave(int id): mId(id) {
         

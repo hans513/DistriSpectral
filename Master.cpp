@@ -11,7 +11,9 @@
 void Master::run() {
     cout << "This is master";
     
-    test();
+    //test();
+    test_initial();
+    Master::terminate();
 }
 
 void Master::test() {
@@ -21,11 +23,31 @@ void Master::test() {
     
     int size[]={3,3};
     
-    Task task(Task::MULTIPLY, size);
+    //Task task(Task::MULTIPLY, size);
     
     
     //MPI_Send(size1, 2, MPI_INT, id, 1, MPI_COMM_WORLD);
     //MPI_Send(temp1.data(), temp1.size(), MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
-    MPI_Send(&task, sizeof(task), MPI_CHAR, 1, 1, MPI_COMM_WORLD);
+    //MPI_Send(&task, sizeof(task), MPI_CHAR, 1, 1, MPI_COMM_WORLD);
     
+}
+
+void Master::test_initial() {
+    
+    MatrixXd a(3,3);
+    a << 1,2,3,4,5,6,7,8,9;
+    
+    int size[]={3,3};
+    
+    Task task(Task::INITIAL, size);
+    
+    MPI_Send(&task, sizeof(task), MPI_CHAR, 1, 1, MPI_COMM_WORLD);
+    MPI_Send(a.data(), a.size(), MPI_DOUBLE, 1, 1, MPI_COMM_WORLD);
+    
+}
+
+void Master::terminate() {
+    
+     Task task(Task::TERMINATE);
+     MPI_Send(&task, sizeof(task), MPI_CHAR, 1, 1, MPI_COMM_WORLD);
 }

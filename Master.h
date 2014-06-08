@@ -26,13 +26,16 @@ class Master {
     
 public:
     
-    Master() {  
+    Master(int numproc): mNumProc(numproc) {
     }
     
     void run();
+    void terminate();
+
     void test();
-    
+    void test_initial();
+
 private:
-    
+    int mNumProc;
     
 };
