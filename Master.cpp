@@ -43,7 +43,7 @@ void Master::test_initial() {
     
     Task task(Task::INITIAL, size);
     
-    MPI_Send(&task, sizeof(task), MPI_CHAR, 1, 1, MPI_COMM_WORLD);
+    MPI_Send(&task, sizeof(task), MPI_CHAR, 1, 0, MPI_COMM_WORLD);
     MPI_Send(a.data(), a.size(), MPI_DOUBLE, 1, 1, MPI_COMM_WORLD);
     
 }
@@ -51,5 +51,5 @@ void Master::test_initial() {
 void Master::terminate() {
     
      Task task(Task::TERMINATE);
-     MPI_Send(&task, sizeof(task), MPI_CHAR, 1, 1, MPI_COMM_WORLD);
+     MPI_Send(&task, sizeof(task), MPI_CHAR, 1, 0, MPI_COMM_WORLD);
 }

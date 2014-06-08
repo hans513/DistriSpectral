@@ -23,7 +23,7 @@ void Slave::run() {
             cout << "Remote >> mId:" << mId << " Wait for next task" <<endl;
         }
         
-        MPI_Recv(taskBuf, sizeof(Task), MPI_CHAR, 0, 1, MPI_COMM_WORLD, &status);
+        MPI_Recv(taskBuf, sizeof(Task), MPI_CHAR, MASTER_ID, 0, MPI_COMM_WORLD, &status);
         Task* task = (Task*) taskBuf;
     
         
