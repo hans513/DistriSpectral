@@ -12,8 +12,10 @@ void Master::run() {
     cout << "This is master";
     
     //test();
+    cout << endl << "Master:Initial" << endl;
     test_initial();
-    Master::terminate();
+    cout << endl << "Master:Terminate" << endl;
+    terminate();
 }
 
 void Master::test() {

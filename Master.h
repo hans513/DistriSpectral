@@ -26,6 +26,8 @@ class Master {
     
 public:
     
+    static const int DBG = 1;
+    
     Master(int numproc): mNumProc(numproc) {
     }
     
