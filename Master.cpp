@@ -16,6 +16,7 @@ void Master::run() {
     test_initial();
     cout << endl << "Master:Terminate" << endl;
     terminate();
+    cout << endl << "Master:Finish Terminate" << endl;
 }
 
 void Master::test() {

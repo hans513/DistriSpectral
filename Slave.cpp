@@ -27,6 +27,10 @@ void Slave::run() {
         Task* task = (Task*) taskBuf;
     
         
+        if (DBG) {
+            cout << "Remote >> mId:" << mId << " Got task:" <<task->cmd()<< endl;
+        }
+        
         switch (task->cmd()) {
             
             {case Task::TERMINATE:
@@ -60,6 +64,9 @@ void Slave::run() {
             }
         }
     
+        if (DBG) {
+            cout << "Remote >> mId:" << mId << " Finish task" <<endl;
+        }
        
         
         /*
