@@ -51,6 +51,8 @@ void Master::test_initial() {
 
 void Master::terminate() {
     
-     Task task(Task::TERMINATE);
-     MPI_Send(&task, sizeof(task), MPI_CHAR, 1, 0, MPI_COMM_WORLD);
+    Task task(Task::TERMINATE);
+    for (int id=1; id<mNumProc; id++) {
+        MPI_Send(&task, sizeof(task), MPI_CHAR, id, 0, MPI_COMM_WORLD);
+    }
 }

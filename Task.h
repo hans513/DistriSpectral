@@ -14,10 +14,14 @@
 #endif /* defined(__DistriSpectral__Task__) */
 
 
+using namespace std;
+
 class Task {
 
     
 public:
+    
+    static const int DBG = 1;
     
     static const int TERMINATE = -1;
     static const int INITIAL = 1;
@@ -30,6 +34,9 @@ public:
     
     Task(int cmd, int* size): mCmd(cmd) {
         if (size!=NULL) memcpy( mSize, size, sizeof(mSize));
+        
+        if (DBG) cout << "Task cmd: " << mCmd << "  Generated" << endl;
+        
     }
     
     int cmd() {
