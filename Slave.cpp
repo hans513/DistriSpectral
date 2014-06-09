@@ -8,11 +8,12 @@
 
 #include "Slave.h"
 
+using namespace std;
+using namespace Eigen;
 
 void Slave::run() {
-    cout << "Remote >> mId:" << mId << " Ready" << endl;
-    
-    //vector<double> buffer(BUF_SIZE);
+
+    // Buffer for receiving the remote task
     char taskBuf[sizeof(Task)];
     MPI_Status status;
     int exit = 0;
@@ -23,6 +24,7 @@ void Slave::run() {
             cout << "Remote >> mId:" << mId << " Wait for next task" <<endl;
         }
         
+        // Receive remote task here
         MPI_Recv(taskBuf, sizeof(Task), MPI_CHAR, MASTER_ID, 0, MPI_COMM_WORLD, &status);
         Task* task = (Task*) taskBuf;
     
@@ -31,6 +33,7 @@ void Slave::run() {
             cout << "Remote >> mId:" << mId << " Got task:" <<task->cmd()<< endl;
         }
         
+        // Decide what task to do
         switch (task->cmd()) {
             
             {case Task::TERMINATE:
@@ -39,6 +42,8 @@ void Slave::run() {
                 break;
             }
                 
+                
+            // Send the data matrix chunk
             {case Task::INITIAL:
                 
                 int dataSize;

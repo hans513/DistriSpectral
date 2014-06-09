@@ -109,6 +109,9 @@ int main( int argc, char *argv[] )
         
         Master* master = new Master(numprocs);
         master->run();
+        
+       
+        
         /*
 
         cout << endl<<"Master: numprocs:" << numprocs << endl;

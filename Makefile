@@ -9,6 +9,6 @@ ifeq ($(UNAME_S),Darwin)
 endif
 
 
-main: main.cpp Master.cpp Slave.cpp
-	mpicxx -I $(EIGEN) -o eigenMpi main.cpp Master.cpp Slave.cpp
+main: main.cpp Master.cpp Slave.cpp DataGenerator.cpp Task.cpp
+	mpicxx -I $(EIGEN) -o eigenMpi main.cpp Master.cpp Slave.cpp DataGenerator.cpp Task.cpp
 

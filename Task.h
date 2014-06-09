@@ -54,3 +54,23 @@ private:
     int mSize[2];
     
 };
+
+
+class ChunkInfo {
+
+public:
+    ChunkInfo(int start, int end): mStart(start), mEnd(end){};
+    
+    void assign(int slave) {
+        mSlave = slave;
+    }
+    
+    int start() { return mStart;}
+    int end() { return mEnd;}
+    int slave() { return mSlave;}
+    
+private:
+    int mStart;
+    int mEnd;
+    int mSlave;
+};

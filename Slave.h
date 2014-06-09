@@ -28,8 +28,6 @@
 #define BCOL 1000
 #define BUF_SIZE AROW*BCOL
 
-using namespace std;
-using namespace Eigen;
 
 class Slave {
     
