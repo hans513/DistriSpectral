@@ -48,10 +48,6 @@ void Master::initialize() {
     mChunkVec.push_back(ChunkInfo((nChunk-1)*blk, data->X().cols()+1));
     
     
-    for (int i=0; i<n; <#increment#>) {
-        <#statements#>
-    }
-    
 
     
     //mDataset = data.X
