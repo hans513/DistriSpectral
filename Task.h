@@ -28,11 +28,13 @@ public:
     static const int MULTIPLY = 10;
     static const int TEST = 99;
     
+    /*
     Task(int cmd) {
         Task(cmd, NULL);
-    }
+    }*/
+     
     
-    Task(int cmd, int* size): mCmd(cmd) {
+    Task(int cmd, int* size=NULL): mCmd(cmd) {
         if (size!=NULL) memcpy( mSize, size, sizeof(mSize));
         
         if (DBG) cout << "Task cmd: " << mCmd << "  Generated" << endl;

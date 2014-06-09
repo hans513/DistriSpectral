@@ -15,9 +15,9 @@ void Slave::run() {
     //vector<double> buffer(BUF_SIZE);
     char taskBuf[sizeof(Task)];
     MPI_Status status;
+    int exit = 0;
     
-    
-    while (true) {
+    while (!exit) {
 
         if (DBG) {
             cout << "Remote >> mId:" << mId << " Wait for next task" <<endl;
@@ -35,7 +35,7 @@ void Slave::run() {
             
             {case Task::TERMINATE:
                 cout << "Remote >> mId:" << mId << " TERMINATE!"<<endl;
-                exit (EXIT_SUCCESS);
+                exit=1;
                 break;
             }
                 
