@@ -50,16 +50,16 @@ void Logic::initialize() {
     mChunkVec.push_back(ChunkInfo((nChunk-1)*blk, data->X().cols()+1));
     
     
-    mBufMatrix = MatrixXd::Zero(rows,cols);
+    mBufMatrix = MatrixXd::Zero(nDimension, target);
     
     for (int i=0; i<nChunk; i++) {
         int nCol = mChunkVec.at(i).end()-mChunkVec.at(i).start();
-        int size[2] = {nDimension, nCol}
-        Task task(TASK::INITIAL, size);
+        int size[2] = {nDimension, nCol};
+        Task task(Task::INITIAL, size);
         
         int retSize[2] = {nDimension, target};
-        TaskParcel tp(task, data->X().middleCols(mChunkVec.at(i).start(), nCol), Callback_S1(retSize));
-        mDispatcher.submit(tp);
+        TaskParcel tp(task, data->X().middleCols(mChunkVec.at(i).start(), nCol), Callback_S1(retSize, this));
+        mDispatcher->submit(tp);
     }
     
 

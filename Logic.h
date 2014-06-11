@@ -58,7 +58,7 @@ private:
 };
 
 
-class Callback_S1 : Callback {
+class Callback_S1 : public Callback {
     
 public:
     Callback_S1(int size[2], Logic* logic): mLogic(logic) {

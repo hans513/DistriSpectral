@@ -27,10 +27,13 @@
 #include "DataGenerator.h"
 #endif
 
-#ifndef __DistriSpectral__BlockingQueue__
-#include "BlockingQueue.h"
-#endif
+//#ifndef __DistriSpectral__BlockingQueue__
+//#include "BlockingQueue.h"
+//#endif
 
+#ifndef DistriSpectral_BlockingQueue2_h
+#include "BlockingQueue2.h"
+#endif
 
 class Master {
     
@@ -61,7 +64,7 @@ public:
     
 private:
     
-    Master(&Master){};
+    //Master(const Master&){};
     
     int mNumProc;
     int mExit;

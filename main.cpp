@@ -111,7 +111,7 @@ int main( int argc, char *argv[] )
         
         Master master(numprocs);
         //master.run();
-        std::thread a(&Master::sender, master);
+        std::thread a(&Master::sender, &master);
         
         
         Logic logic(master);
