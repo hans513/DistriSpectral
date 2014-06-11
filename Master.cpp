@@ -35,6 +35,9 @@ void Master::sender() {
         
         // register callback function when the task return
         mCallbackVec.at(slave) = current.callback();
+        
+        cout << endl <<"Master: sender mCallbackVec size:" << mCallbackVec.size() << endl;
+        
         Task ttt = current.task();
         MPI_Send(&ttt, sizeof(Task), MPI_CHAR, slave, 0, MPI_COMM_WORLD);
         
@@ -60,6 +63,9 @@ void Master::receiver() {
         MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, &status);
         
         if (DBG) cout << endl <<"Master: receive from to slave " << status.MPI_SOURCE << endl;
+        
+        cout << endl <<"Master: receiver mCallbackVec size:" << mCallbackVec.size() << endl;
+
         
         //MatrixXd matrix = Map<MatrixXd>(&buffer[0], task->size()[0], task->size()[1]);
     
