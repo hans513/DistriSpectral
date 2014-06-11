@@ -54,27 +54,21 @@ void Logic::initialize() {
     
     for (int i=0; i<nChunk; i++) {
         
-        cout << endl << "gogo" << endl;
+ 
         int nCol = mChunkVec.at(i).end()-mChunkVec.at(i).start();
         int size[2] = {nDimension, nCol};
         Task task(Task::INITIAL, size, nTarget);
-         cout << endl << "??" << endl;
+      
         int retSize[2] = {nDimension, nTarget};
-         cout << endl << "!!" << endl;
+
         cout << endl << "start:" << mChunkVec.at(i).start() << "  end:" << mChunkVec.at(i).end();
         
-        cout << endl << "aaaaaaaaaafsajfklsa;jfk;sajkdf;jals;";
-        cout << endl << "aaaaaaaaaafsajfklsa;jfk;sajkdf;jals;";
-        cout << endl << "aaaaaaaaaafsajfklsa;jfk;sajkdf;jals;";cout << endl << "aaaaaaaaaafsajfklsa;jfk;sajkdf;jals;";cout << endl << "aaaaaaaaaafsajfklsa;jfk;sajkdf;jals;";
-        cout << endl << "aaaaaaaaaafsajfklsa;jfk;sajkdf;jals;";
-        cout << endl << "aaaaaaaaaafsajfklsa;jfk;sajkdf;jals;" << endl;
+
         TaskParcel tp(task, data->X().middleCols(mChunkVec.at(i).start(), nCol), Callback_S1(retSize, this));
         
-        cout << endl << "check" << endl;
-        
+
         mDispatcher->submit(tp);
-        
-        cout << endl << "next" << endl;
+
     }
     
 
