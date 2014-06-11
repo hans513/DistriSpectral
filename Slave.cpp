@@ -46,6 +46,12 @@ void Slave::run() {
             // Send the data matrix chunk
             {case Task::INITIAL:
                 
+                
+                
+                if (DBG) {
+                    cout << "Remote >> mId:" << mId << " Task::INITIAL" <<endl;
+                }
+                
                 int dataSize;
                 MPI_Probe(MASTER_ID, 1, MPI_COMM_WORLD, &status);
                 MPI_Get_count(&status, MPI_DOUBLE, &dataSize);
@@ -54,7 +60,7 @@ void Slave::run() {
                 MatrixXd matrix = Map<MatrixXd>(&buffer[0], task->size()[0], task->size()[1]);
                 
                 if (DBG) {
-                    cout << "Remote >> mId:" << mId << " Initial got:" << matrix <<endl;
+                    cout << "Remote >> mId:" << mId << " Task::INITIAL  data received" <<endl;
                 }
                 
                 initialWork(matrix, task->info());
@@ -104,7 +110,6 @@ void Slave::initialWork(MatrixXd input, int target) {
     
     cout << "Remote >> mId:" << mId << " InitialWork" <<endl;
 
-    
     srand (time(NULL));
     random_device rd;
     default_random_engine generator(rd());
@@ -119,6 +124,8 @@ void Slave::initialWork(MatrixXd input, int target) {
     }
     
     MatrixXd result = input*gausssian;
+    
+    cout << "Remote >> mId:" << mId << " InitialWork Sending result back" <<endl;
     MPI_Send(result.data(), result.size(), MPI_DOUBLE, MASTER_ID, Task::RETURN_TAG, MPI_COMM_WORLD);
     
 }

@@ -29,6 +29,8 @@ void Master::sender() {
         // May Block here: get a available slave to assign
         int slave = mAvailSlave.pop();
         
+        if (DBG) cout << endl <<"Master: send task " << current.task().cmd() << " to slave " << slave << endl;
+        
         // register callback function when the task return
         mCallbackVec.at(slave) = current.callback();
         Task ttt = current.task();
@@ -52,6 +54,8 @@ void Master::receiver() {
         MPI_Get_count(&status, MPI_DOUBLE, &dataSize);
         vector<double> buffer(dataSize);
         MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, &status);
+        
+        if (DBG) cout << endl <<"Master: receive from to slave " << status.MPI_SOURCE << endl;
         
         //MatrixXd matrix = Map<MatrixXd>(&buffer[0], task->size()[0], task->size()[1]);
     

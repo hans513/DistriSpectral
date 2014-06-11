@@ -61,7 +61,7 @@ void Logic::initialize() {
       
         int retSize[2] = {nDimension, nTarget};
 
-        cout << endl << "start:" << mChunkVec.at(i).start() << "  end:" << mChunkVec.at(i).end();
+        //cout << endl << "start:" << mChunkVec.at(i).start() << "  end:" << mChunkVec.at(i).end();
         
 
         TaskParcel tp(task, data->X().middleCols(mChunkVec.at(i).start(), nCol), Callback_S1(retSize, this));

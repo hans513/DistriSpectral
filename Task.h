@@ -47,9 +47,6 @@ public:
     
     Task(int cmd, int size[2]=NULL, int info=0): mCmd(cmd), mInfo(info) {
         if (size!=NULL) memcpy( mSize, size, sizeof(mSize));
-        
-        if (DBG) cout << "Task cmd: " << mCmd << "  Generated" << endl;
-        
     }
     
     int cmd() {
