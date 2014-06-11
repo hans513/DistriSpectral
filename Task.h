@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <Eigen/Dense>
+#include <cstring>
 
 #endif /* defined(__DistriSpectral__Task__) */
 
