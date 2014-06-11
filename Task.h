@@ -22,7 +22,7 @@ using namespace std;
 class Callback {
 public:
     Callback(){};
-    virtual void notify(void* data) = 0;
+    virtual void notify(void* data) {cout<<endl<<"virtual function!!";};
     void setname(char *input) {
         strncpy(mName, input, sizeof(mName));
     }
@@ -78,20 +78,20 @@ private:
 class TaskParcel {
   
 public:
-    TaskParcel(Task task, Eigen::MatrixXd data, Callback callback): mTask(task){
+    TaskParcel(Task task, Eigen::MatrixXd data, Callback &callback): mTask(task){
         mData = data;
-        mCallback = callback;
+        mCallback = &callback;
     };
     
     Task task() {return mTask;}
     void* data() {return mData.data();}
     int dataSize(){return mData.size();}
-    Callback callback() {return mCallback;}
+    Callback callback() {return *mCallback;}
     
 private:
     Task mTask;
     Eigen::MatrixXd mData;
-    Callback mCallback;
+    Callback* mCallback;
 };
 
 
