@@ -111,7 +111,7 @@ void Slave::run() {
 
 void Slave::initialWork(MatrixXd input, int target) {
     
-    cout << "Remote >> mId:" << mId << " InitialWork" <<endl;
+    cout << endl << "Remote >> mId:" << mId << " InitialWork" <<endl;
 
     srand (time(NULL));
     random_device rd;

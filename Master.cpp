@@ -24,28 +24,27 @@ void Master::sender() {
     
     while (!mExit) {
         
-         cout << endl <<"Master: pop next task";
+         cout << endl <<"Master sender ==>>: pop next task";
         
         // May Block here: get next task to assign
         TaskParcel current = mTaskQueue.pop();
         // May Block here: get a available slave to assign
         int slave = mAvailSlave.pop();
         
-        if (DBG) cout << endl <<"Master: send task " << current.task().cmd() << " to slave " << slave << endl;
+        if (DBG) cout << endl <<"Master sender ==>>: send task " << current.task().cmd() << " to slave " << slave << endl;
         
         // register callback function when the task return
         mCallbackVec.at(slave) = current.callback();
         
-        cout << endl <<"Master: sender mCallbackVec size:" << mCallbackVec.size();
-        Callback cb = mCallbackVec.at(slave);
-        cout << endl <<"Master: sender cb name" << cb.name() << endl;
+        cout << endl <<"Master sender ==>>: sender mCallbackVec size:" << mCallbackVec.size();
+        Callback* cb = mCallbackVec.at(slave);
+        cout << endl <<"Master: sender cb name" << cb->name() << endl;
         
         Task ttt = current.task();
         MPI_Send(&ttt, sizeof(Task), MPI_CHAR, slave, 0, MPI_COMM_WORLD);
-        
-         cout << endl <<"Master: after send task to slave " << slave << endl;
+
         if (current.data()==NULL) continue;
-         cout << endl <<"Master: send data to slave " << slave << endl;
+         cout << endl <<"Master sender ==>>: send data to slave " << slave << endl;
         MPI_Send(current.data(), current.dataSize(), MPI_DOUBLE, slave, 1, MPI_COMM_WORLD);
     }
     
@@ -58,7 +57,7 @@ void Master::receiver() {
     
     while (!mExit) {
         
-        cout << endl <<"Master: receiver prepare to receive next msg size:" << endl;
+        cout << endl <<"Master receiver <<==: receiver prepare to receive next msg size:" << endl;
         
         // May Block here
         MPI_Probe(MPI_ANY_SOURCE, Task::RETURN_TAG, MPI_COMM_WORLD, &status);
@@ -66,20 +65,20 @@ void Master::receiver() {
         vector<double> buffer(dataSize);
         MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, &status);
         
-        if (DBG) cout << endl <<"Master: receive from to slave " << status.MPI_SOURCE << endl;
+        if (DBG) cout << endl <<"Master receiver <<==: receive from to slave " << status.MPI_SOURCE << endl;
         
-        cout << endl <<"Master: receiver mCallbackVec size:" << mCallbackVec.size() << endl;
+        cout << endl <<"Master receiver <<==: receiver mCallbackVec size:" << mCallbackVec.size() << endl;
 
         
         //MatrixXd matrix = Map<MatrixXd>(&buffer[0], task->size()[0], task->size()[1]);
     
-        cout << endl <<"Master: !!!!"<< mCallbackVec.at(status.MPI_SOURCE).name();
+        cout << endl <<"Master receiver <<==: !!!!"<< mCallbackVec.at(status.MPI_SOURCE)->name();
         
         // Callback function knows how to handle data
-        mCallbackVec.at(status.MPI_SOURCE).notify(&buffer[0]);
+        mCallbackVec.at(status.MPI_SOURCE)->notify(&buffer[0]);
         
-        cout << endl <<"Master: Check"<< endl;
-        cout << endl <<"Master: Check"<< endl;
+        cout << endl <<"Master receiver <<==: Check"<< endl;
+        cout << endl <<"Master receiver <<==: Check"<< endl;
         
         
 //      mCallbackVec.at(status.MPI_SOURCE) ;
@@ -87,8 +86,8 @@ void Master::receiver() {
         // Put the slave back to available pool
         mAvailSlave.push(status.MPI_SOURCE);
         
-        cout << endl <<"Master: Check1"<< endl;
-        cout << endl <<"Master: Check1"<< endl;
+        cout << endl <<"Master receiver <<==: Check1"<< endl;
+        cout << endl <<"Master receiver <<==: Check1"<< endl;
     }
     
 }

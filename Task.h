@@ -20,13 +20,19 @@ using namespace std;
 
 
 class Callback {
+
 public:
     Callback(){};
-    virtual void notify(void* data) {cout<<endl<<"virtual function!!";};
+    
+    virtual void notify(void* data) {
+        cout<<endl<<"virtual function!!";
+    };
+    
     void setname(char *input) {
         strncpy(mName, input, sizeof(mName));
     }
     char* name() {return mName;};
+
 private:
     char  mName[32];
 };
@@ -86,7 +92,7 @@ public:
     Task task() {return mTask;}
     void* data() {return mData.data();}
     int dataSize(){return mData.size();}
-    Callback callback() {return *mCallback;}
+    Callback* callback() {return mCallback;}
     
 private:
     Task mTask;

@@ -46,7 +46,7 @@ public:
         for (int i=1; i<numproc; i++) {
             mAvailSlave.push(i);
         }
-        mCallbackVec = vector<Callback>(numproc);
+        mCallbackVec = vector<Callback*>(numproc);
     }
     
     ~Master() {
@@ -72,7 +72,7 @@ private:
     BlockingQueue<TaskParcel> mTaskQueue;
     BlockingQueue<int> mAvailSlave;
     
-    vector<Callback> mCallbackVec;
+    vector<Callback*> mCallbackVec;
     
     // The state of slvae: 0 = free, 1 = busy
     //vector<int> mSlaveState;
