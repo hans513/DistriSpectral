@@ -24,6 +24,8 @@ void Master::sender() {
     
     while (!mExit) {
         
+         cout << endl <<"Master: pop next task";
+        
         // May Block here: get next task to assign
         TaskParcel current = mTaskQueue.pop();
         // May Block here: get a available slave to assign
@@ -36,6 +38,7 @@ void Master::sender() {
         Task ttt = current.task();
         MPI_Send(&ttt, sizeof(Task), MPI_CHAR, slave, 0, MPI_COMM_WORLD);
         
+         cout << endl <<"Master: after send task to slave " << slave << endl;
         if (current.data()==NULL) continue;
          cout << endl <<"Master: send data to slave " << slave << endl;
         MPI_Send(current.data(), current.dataSize(), MPI_DOUBLE, slave, 1, MPI_COMM_WORLD);
