@@ -10,15 +10,23 @@
 #define __DistriSpectral__Task__
 
 #include <iostream>
+#include <Eigen/Dense>
 
 #endif /* defined(__DistriSpectral__Task__) */
 
 
 using namespace std;
 
+
+class Callback {
+public:
+    Callback(){};
+    void notify(void* data){};
+};
+
+
 class Task {
 
-    
 public:
     
     static const int DBG = 1;
@@ -28,13 +36,15 @@ public:
     static const int MULTIPLY = 10;
     static const int TEST = 99;
     
-    /*
-    Task(int cmd) {
-        Task(cmd, NULL);
-    }*/
-     
+    static const int RETURN_TAG = 9;
     
-    Task(int cmd, int* size=NULL): mCmd(cmd) {
+    /*
+     Task(int cmd) {
+     Task(cmd, NULL);
+     }*/
+    
+    
+    Task(int cmd, int size[2]=NULL, int info=0): mCmd(cmd), mInfo(info) {
         if (size!=NULL) memcpy( mSize, size, sizeof(mSize));
         
         if (DBG) cout << "Task cmd: " << mCmd << "  Generated" << endl;
@@ -48,11 +58,32 @@ public:
     int* size() {
         return mSize;
     }
-
+    
 private:
     int mCmd;
     int mSize[2];
+    int mInfo;
     
+};
+
+
+class TaskParcel {
+  
+public:
+    TaskParcel(Task task, Eigen::MatrixXd data, Callback callback): mTask(task){
+        mData = data;
+        mCallback = callback;
+    };
+    
+    Task task() {return mTask;}
+    void* data() {return mData.data();}
+    int dataSize(){return mData.size();}
+    Callback callback() {return mCallback;}
+    
+private:
+    Task mTask;
+    Eigen::MatrixXd mData;
+    Callback mCallback;
 };
 
 

@@ -12,11 +12,13 @@
 #include "mpi.h"
 #include "Master.h"
 #include "Slave.h"
+#include "Logic.h"
 
 #include <stdio.h>
 #include <iostream>
 #include <vector>
 #include <Eigen/Dense>
+#include <thread>
 
 using namespace Eigen;
 using namespace std;
@@ -107,10 +109,13 @@ int main( int argc, char *argv[] )
     /* Send the data to only one in cluster*/
     if(myid==0) {
         
-        Master* master = new Master(numprocs);
-        master->run();
+        Master master(numprocs);
+        //master.run();
+        std::thread a(&Master::sender, master);
         
-       
+        
+        Logic logic(master);
+        logic.start();
         
         /*
 

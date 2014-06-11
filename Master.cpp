@@ -13,21 +13,71 @@ using namespace std;
 using namespace Eigen;
 
 void Master::run() {
-    cout << "This is master";
+    cout << "Master on duty" << endl;
+
+    //thread sender(&Master::sender, this);
+    //thread receiver(&Master::receiver, this);
+
+}
+
+void Master::sender() {
     
-    //test();
+    while (!mExit) {
+        
+        // May Block here: get next task to assign
+        TaskParcel current = mTaskQueue.pop();
+        // May Block here: get a available slave to assign
+        int slave = mAvailSlave.pop();
+        
+        // register callback function when the task return
+        mCallbackVec.at(slave) = current.callback();
+        Task ttt = current.task();
+        MPI_Send(&ttt, sizeof(Task), MPI_CHAR, slave, 0, MPI_COMM_WORLD);
+        
+        if (current.data()==NULL) continue;
+        MPI_Send(current.data(), current.dataSize(), MPI_DOUBLE, slave, 1, MPI_COMM_WORLD);
+    }
     
-    initialize();
-    /*
-    cout << endl << "Master:Initial" << endl;
-    test_initial();
-    cout << endl << "Master:Terminate" << endl;
-    terminate();
-    cout << endl << "Master:Finish Terminate" << endl;
-     */
+}
+
+void Master::receiver() {
+    
+    int dataSize;
+    MPI_Status status;
+    
+    while (!mExit) {
+        
+        // May Block here
+        MPI_Probe(MPI_ANY_SOURCE, Task::RETURN_TAG, MPI_COMM_WORLD, &status);
+        MPI_Get_count(&status, MPI_DOUBLE, &dataSize);
+        vector<double> buffer(dataSize);
+        MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, &status);
+        
+        //MatrixXd matrix = Map<MatrixXd>(&buffer[0], task->size()[0], task->size()[1]);
+    
+        // Callback function knows how to handle data
+        mCallbackVec.at(status.MPI_SOURCE).notify(&buffer[0]);
+//      mCallbackVec.at(status.MPI_SOURCE) ;
+
+        // Put the slave back to available pool
+        mAvailSlave.push(status.MPI_SOURCE);
+    }
+    
+}
+
+void Master::submit(TaskParcel parcel) {
+    mTaskQueue.push(parcel);
 }
 
 
+void Master::terminate() {
+    Task task(Task::TERMINATE);
+    for (int id=1; id<mNumProc; id++) {
+        MPI_Send(&task, sizeof(task), MPI_CHAR, id, 0, MPI_COMM_WORLD);
+    }
+}
+
+/*
 // Split data or generate data info here
 void Master::initialize() {
     
@@ -75,11 +125,5 @@ void Master::test_initial() {
     MPI_Send(a.data(), a.size(), MPI_DOUBLE, 1, 1, MPI_COMM_WORLD);
     
 }
+ */
 
-void Master::terminate() {
-    
-    Task task(Task::TERMINATE);
-    for (int id=1; id<mNumProc; id++) {
-        MPI_Send(&task, sizeof(task), MPI_CHAR, id, 0, MPI_COMM_WORLD);
-    }
-}
