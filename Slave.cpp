@@ -126,6 +126,9 @@ void Slave::initialWork(MatrixXd input, int target) {
         }
     }
     
+      cout << endl << "Remote >> mId:" << mId << " matrix got: " <<input.rows() << "  " << input.cols();
+    cout << endl << "Remote >> mId:" << mId << " gaussian got: " <<gausssian.rows() << "  " << gausssian.cols();
+    
     MatrixXd result = input*gausssian;
     
     cout << "Remote >> mId:" << mId << " InitialWork Sending result back" <<endl;
