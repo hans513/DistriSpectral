@@ -60,11 +60,13 @@ public:
     void submit(TaskParcel parcel);
     
 private:
+    
+    Master(&Master){};
+    
     int mNumProc;
     int mExit;
     
     BlockingQueue<TaskParcel> mTaskQueue;
-    
     BlockingQueue<int> mAvailSlave;
     
     vector<Callback> mCallbackVec;
