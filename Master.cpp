@@ -81,6 +81,10 @@ void Master::receiver() {
 
         // Put the slave back to available pool
         mAvailSlave.push(status.MPI_SOURCE);
+        
+        cout << endl <<"Master: Check1"<< endl;
+        cout << endl <<"Master: Check1"<< endl;cout << endl <<"Master: Check1"<< endl;
+        cout << endl <<"Master: Check1"<< endl;cout << endl <<"Master: Check1"<< endl;
     }
     
 }
