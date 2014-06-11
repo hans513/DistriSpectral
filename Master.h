@@ -46,7 +46,7 @@ public:
         for (int i=1; i<numproc; i++) {
             mAvailSlave.push(i);
         }
-        mCallbackVec = vector<Callback>(numproc-1);
+        mCallbackVec = vector<Callback>(numproc);
     }
     
     ~Master() {

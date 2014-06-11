@@ -54,7 +54,7 @@ void Logic::initialize() {
     
     for (int i=0; i<nChunk; i++) {
         
- 
+        cout << endl << " i="<< i << "  nChunk=" << nChunk;
         int nCol = mChunkVec.at(i).end()-mChunkVec.at(i).start();
         int size[2] = {nDimension, nCol};
         Task task(Task::INITIAL, size, nTarget);

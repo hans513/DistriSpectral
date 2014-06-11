@@ -65,7 +65,7 @@ public:
         if (size!=NULL) memcpy( mSize, size, sizeof(mSize));
     }
     
-    void notify(void* data) {
+    virtual void notify(void* data) {
         cout << endl <<"Notify!!" << endl;
         cout << endl <<"Notify!!" << endl;
         cout << endl <<"Notify!!" << endl;

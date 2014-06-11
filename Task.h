@@ -22,7 +22,7 @@ using namespace std;
 class Callback {
 public:
     Callback(){};
-    virtual void notify(void* data){};
+    virtual void notify(void* data) = 0;
     void setname(char *input) {
         strncpy(mName, input, sizeof(mName));
     }

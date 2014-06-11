@@ -53,17 +53,17 @@ void Slave::run() {
                 }
                 
                 int dataSize;
-                cout << "Remote >> mId:" << mId << " Task::INITIAL probe" <<endl;
+                cout << endl <<"Remote >> mId:" << mId << " Task::INITIAL probe";
                 MPI_Probe(MASTER_ID, 1, MPI_COMM_WORLD, &status);
-                cout << "Remote >> mId:" << mId << " Task::INITIAL get count" <<endl;
+                cout << endl <<"Remote >> mId:" << mId << " Task::INITIAL get count";
                 MPI_Get_count(&status, MPI_DOUBLE, &dataSize);
                 vector<double> buffer(dataSize);
-                cout << "Remote >> mId:" << mId << " Task::INITIAL recv" <<endl;
+                cout << endl <<"Remote >> mId:" << mId << " Task::INITIAL recv";
                 MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, MASTER_ID, 1, MPI_COMM_WORLD, &status);
                 MatrixXd matrix = Map<MatrixXd>(&buffer[0], task->size()[0], task->size()[1]);
                 
                 if (DBG) {
-                    cout << "Remote >> mId:" << mId << " Task::INITIAL  data received" <<endl;
+                    cout << endl << "Remote >> mId:" << mId << " Task::INITIAL  data received";
                 }
                 
                 initialWork(matrix, task->info());
