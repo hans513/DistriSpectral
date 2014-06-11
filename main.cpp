@@ -115,7 +115,7 @@ int main( int argc, char *argv[] )
         std::thread b(&Master::receiver, &master);
         
         Logic logic(master);
-        logic.start();
+        //logic.start();
         
         
         std::thread c(&Logic::start, &logic);

@@ -102,17 +102,23 @@ void Slave::run() {
 
 void Slave::initialWork(MatrixXd input, int target) {
     
+    cout << "Remote >> mId:" << mId << " InitialWork" <<endl;
+
+    
     srand (time(NULL));
     random_device rd;
     default_random_engine generator(rd());
     normal_distribution<double> normal_distri(0, 1);
     
-    MatrixXd mGausssian(input.rows(), target);
+    MatrixXd gausssian(input.rows(), target);
     
-    for (int i=0; i<mGausssian.rows(); i++) {
-        for(int j=0; j<mGausssian.cols(); j++) {
-            mGausssian(i, j) = normal_distri(generator);
+    for (int i=0; i<gausssian.rows(); i++) {
+        for(int j=0; j<gausssian.cols(); j++) {
+            gausssian(i, j) = normal_distri(generator);
         }
     }
+    
+    MatrixXd result = input*gausssian;
+    MPI_Send(result.data(), result.size(), MPI_DOUBLE, MASTER_ID, Task::RETURN_TAG, MPI_COMM_WORLD);
     
 }

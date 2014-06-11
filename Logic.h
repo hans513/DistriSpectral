@@ -66,6 +66,7 @@ public:
     }
     
     void notify(void* data) {
+        cout << endl <<"Notify!!" << endl;
         Eigen::MatrixXd matrix = Eigen::Map<Eigen::MatrixXd>((double*)data, mSize[0], mSize[1]);
         mLogic->mBufMatrix += matrix;
     }
