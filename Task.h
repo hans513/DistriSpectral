@@ -23,6 +23,12 @@ class Callback {
 public:
     Callback(){};
     void notify(void* data){};
+    void setname(char *input) {
+        strncpy(mName, input, sizeof(mName));
+    }
+    char* name() {return mName;};
+private:
+    char  mName[32];
 };
 
 

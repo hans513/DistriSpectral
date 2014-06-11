@@ -63,8 +63,9 @@ void Logic::initialize() {
 
         //cout << endl << "start:" << mChunkVec.at(i).start() << "  end:" << mChunkVec.at(i).end();
         
-
-        TaskParcel tp(task, data->X().middleCols(mChunkVec.at(i).start(), nCol), Callback_S1(retSize, this));
+        Callback_S1 curCb(retSize, this);
+        curCb.setname("This is");
+        TaskParcel tp(task, data->X().middleCols(mChunkVec.at(i).start(), nCol), curCb);
         
 
         mDispatcher->submit(tp);

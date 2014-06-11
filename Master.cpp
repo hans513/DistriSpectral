@@ -56,6 +56,8 @@ void Master::receiver() {
     
     while (!mExit) {
         
+        cout << endl <<"Master: receiver prepare to receive next msg size:" << endl;
+        
         // May Block here
         MPI_Probe(MPI_ANY_SOURCE, Task::RETURN_TAG, MPI_COMM_WORLD, &status);
         MPI_Get_count(&status, MPI_DOUBLE, &dataSize);
@@ -69,6 +71,8 @@ void Master::receiver() {
         
         //MatrixXd matrix = Map<MatrixXd>(&buffer[0], task->size()[0], task->size()[1]);
     
+        cout << endl <<"Master: !!!!"<< mCallbackVec.at(status.MPI_SOURCE).name();
+        
         // Callback function knows how to handle data
         mCallbackVec.at(status.MPI_SOURCE).notify(&buffer[0]);
         
