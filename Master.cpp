@@ -37,6 +37,7 @@ void Master::sender() {
         MPI_Send(&ttt, sizeof(Task), MPI_CHAR, slave, 0, MPI_COMM_WORLD);
         
         if (current.data()==NULL) continue;
+         cout << endl <<"Master: send data to slave " << slave << endl;
         MPI_Send(current.data(), current.dataSize(), MPI_DOUBLE, slave, 1, MPI_COMM_WORLD);
     }
     
