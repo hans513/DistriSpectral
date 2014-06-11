@@ -118,7 +118,7 @@ void Slave::initialWork(MatrixXd input, int target) {
     default_random_engine generator(rd());
     normal_distribution<double> normal_distri(0, 1);
     
-    MatrixXd gausssian(input.rows(), target);
+    MatrixXd gausssian(input.cols(), target);
     
     for (int i=0; i<gausssian.rows(); i++) {
         for(int j=0; j<gausssian.cols(); j++) {
