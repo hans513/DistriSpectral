@@ -131,7 +131,7 @@ void Slave::initialWork(MatrixXd input, int target) {
     
     MatrixXd result = input*gausssian;
     
-    cout << "Remote >> mId:" << mId << " InitialWork Sending result back" <<endl;
+    cout << endl << "Remote >> mId:" << mId << " InitialWork Sending result back";
     MPI_Send(result.data(), result.size(), MPI_DOUBLE, MASTER_ID, Task::RETURN_TAG, MPI_COMM_WORLD);
     
 }

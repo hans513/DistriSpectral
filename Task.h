@@ -84,9 +84,9 @@ private:
 class TaskParcel {
   
 public:
-    TaskParcel(Task task, Eigen::MatrixXd data, Callback &callback): mTask(task){
+    TaskParcel(Task task, Eigen::MatrixXd data, Callback* callback): mTask(task){
         mData = data;
-        mCallback = &callback;
+        mCallback = callback;
     };
     
     Task task() {return mTask;}
