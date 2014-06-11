@@ -60,6 +60,10 @@ public:
         return mSize;
     }
     
+    int info() {
+        return mInfo;
+    }
+    
 private:
     int mCmd;
     int mSize[2];

@@ -39,7 +39,7 @@ void Logic::initialize() {
     
     int nChunk = 4;
     
-    int target = 5;
+    int nTarget = 5;
     
     //For a large data input we want to split it here;
     data = new DataGenerator(nDimension, nGaussian, nDataPerGaussian, pow(noise,0.5), unitRadius);
@@ -50,14 +50,14 @@ void Logic::initialize() {
     mChunkVec.push_back(ChunkInfo((nChunk-1)*blk, data->X().cols()+1));
     
     
-    mBufMatrix = MatrixXd::Zero(nDimension, target);
+    mBufMatrix = MatrixXd::Zero(nDimension, nTarget);
     
     for (int i=0; i<nChunk; i++) {
         int nCol = mChunkVec.at(i).end()-mChunkVec.at(i).start();
         int size[2] = {nDimension, nCol};
-        Task task(Task::INITIAL, size);
+        Task task(Task::INITIAL, size, nTarget);
         
-        int retSize[2] = {nDimension, target};
+        int retSize[2] = {nDimension, nTarget};
         TaskParcel tp(task, data->X().middleCols(mChunkVec.at(i).start(), nCol), Callback_S1(retSize, this));
         mDispatcher->submit(tp);
     }

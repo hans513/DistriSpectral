@@ -57,6 +57,8 @@ void Slave::run() {
                     cout << "Remote >> mId:" << mId << " Initial got:" << matrix <<endl;
                 }
                 
+                initialWork(matrix, task->info());
+                
                 break;
             }
             
@@ -96,4 +98,21 @@ void Slave::run() {
         */
         
     }
+}
+
+void Slave::initialWork(MatrixXd input, int target) {
+    
+    srand (time(NULL));
+    random_device rd;
+    default_random_engine generator(rd());
+    normal_distribution<double> normal_distri(0, 1);
+    
+    MatrixXd mGausssian(input.rows(), target);
+    
+    for (int i=0; i<mGausssian.rows(); i++) {
+        for(int j=0; j<mGausssian.cols(); j++) {
+            mGausssian(i, j) = normal_distri(generator);
+        }
+    }
+    
 }

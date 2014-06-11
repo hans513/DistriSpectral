@@ -13,6 +13,7 @@
 #include <Eigen/Dense>
 #include <stdlib.h>
 #include <vector>
+#include <random>
 #include "mpi.h"
 
 #endif /* defined(__DistriSpectral__Slave__) */
@@ -41,6 +42,7 @@ public:
     }
     
     void run();
+    void initialWork(Eigen::MatrixXd input, int target);
     
 private:
     
