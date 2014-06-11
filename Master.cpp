@@ -36,7 +36,9 @@ void Master::sender() {
         // register callback function when the task return
         mCallbackVec.at(slave) = current.callback();
         
-        cout << endl <<"Master: sender mCallbackVec size:" << mCallbackVec.size() << endl;
+        cout << endl <<"Master: sender mCallbackVec size:" << mCallbackVec.size();
+        Callback cb = mCallbackVec.at(slave);
+        cout << endl <<"Master: sender cb name" << cb.name() << endl;
         
         Task ttt = current.task();
         MPI_Send(&ttt, sizeof(Task), MPI_CHAR, slave, 0, MPI_COMM_WORLD);
@@ -77,8 +79,7 @@ void Master::receiver() {
         mCallbackVec.at(status.MPI_SOURCE).notify(&buffer[0]);
         
         cout << endl <<"Master: Check"<< endl;
-        cout << endl <<"Master: Check"<< endl;cout << endl <<"Master: Check"<< endl;
-        cout << endl <<"Master: Check"<< endl;cout << endl <<"Master: Check"<< endl;
+        cout << endl <<"Master: Check"<< endl;
         
         
 //      mCallbackVec.at(status.MPI_SOURCE) ;
@@ -87,8 +88,7 @@ void Master::receiver() {
         mAvailSlave.push(status.MPI_SOURCE);
         
         cout << endl <<"Master: Check1"<< endl;
-        cout << endl <<"Master: Check1"<< endl;cout << endl <<"Master: Check1"<< endl;
-        cout << endl <<"Master: Check1"<< endl;cout << endl <<"Master: Check1"<< endl;
+        cout << endl <<"Master: Check1"<< endl;
     }
     
 }
