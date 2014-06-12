@@ -56,16 +56,11 @@ public:
     void run();
     void receiver();
     void sender();
-    //void initialize();
-    //void test();
-    //void test_initial();
     void terminate();
     void submit(TaskParcel parcel);
     
 private:
-    
-    //Master(const Master&){};
-    
+
     int mNumProc;
     int mExit;
     

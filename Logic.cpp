@@ -13,11 +13,21 @@ using namespace std;
 using namespace Eigen;
 
 void Logic::start() {
-    cout << "Logic start";
+    cout << endl << "Logic !! start";
     
-    //test();
+    mWait = 0;
+    
+    cout << endl << "Logic ==============> prepare to wait";
     
     initialize();
+    
+    cout << endl << "Logic ==============> start to wait";
+    cout << endl << "Logic ==============> start to wait";
+    std::unique_lock<std::mutex> lock(mState_mutex);
+    mState_condition.wait(lock);
+    cout << endl << "Logic ==============> finish waiting";
+    
+    finish();
     /*
      cout << endl << "Master:Initial" << endl;
      test_initial();
@@ -38,7 +48,6 @@ void Logic::initialize() {
     double unitRadius =10;
     
     int nChunk = 4;
-    
     int nTarget = 5;
     
     //For a large data input we want to split it here;
@@ -48,25 +57,31 @@ void Logic::initialize() {
         mChunkVec.push_back(ChunkInfo(i*blk, (i+1)*blk));
     }
     mChunkVec.push_back(ChunkInfo((nChunk-1)*blk, data->X().cols()));
-   
-    int retSize[2] = {nDimension, nTarget};
-    Callback_S1* curCb = new Callback_S1(retSize, nChunk, this);
-    curCb->setname("This is");
+
     
-    check = Eigen::MatrixXd::Zero(nDimension, nTarget);
+    int retSize[2] = {nDimension, nTarget};
+    Callback_S1* callback = new Callback_S1(retSize, nChunk, this);
+
+    {
+        std::unique_lock<std::mutex> lock(mState_mutex);
+        mWait = 1;
+    }
     
     for (int i=0; i<nChunk; i++) {
-        
-        cout << endl << " i="<< i << "  nChunk=" << nChunk;
         int nCol = mChunkVec.at(i).end()-mChunkVec.at(i).start();
         int size[2] = {nDimension, nCol};
         Task task(Task::INITIAL, size, nTarget);
-        TaskParcel tp(task, data->X().middleCols(mChunkVec.at(i).start(), nCol), curCb);
-        check += data->X().middleCols(mChunkVec.at(i).start(), nCol);
+        TaskParcel tp(task, data->X().middleCols(mChunkVec.at(i).start(), nCol), callback);
         mDispatcher->submit(tp);
     }
-    
+}
 
+void Logic::finish() {
+    
+    mDispatcher->terminate();
+    
+    cout << endl << "Logic ==============> finish ";
+    cout << endl << "Logic ==============> finish ";
 }
 
 void Logic::test() {

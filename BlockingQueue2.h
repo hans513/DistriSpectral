@@ -3,7 +3,7 @@
 //  DistriSpectral
 //
 //  Created by Huang, Tse-Han on 2014/6/11.
-//  Copyright (c) 2014年 Tse-Han Huang. All rights reserved.
+//  Copyright (c) 2014 Tse-Han Huang. All rights reserved.
 //
 
 #ifndef DistriSpectral_BlockingQueue2_h
@@ -16,11 +16,8 @@
 #endif
 
 
-
-
 template <typename T>
-class BlockingQueue
-{
+class BlockingQueue {
 private:
     std::mutex              d_mutex;
     std::condition_variable d_condition;

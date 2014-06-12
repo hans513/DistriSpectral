@@ -51,12 +51,6 @@ public:
     
     static const int RETURN_TAG = 9;
     
-    /*
-     Task(int cmd) {
-     Task(cmd, NULL);
-     }*/
-    
-    
     Task(int cmd, int size[2]=NULL, int info=0): mCmd(cmd), mInfo(info) {
         if (size!=NULL) memcpy( mSize, size, sizeof(mSize));
     }
@@ -88,6 +82,8 @@ public:
         mData = data;
         mCallback = callback;
     };
+    
+    TaskParcel(Task task): mTask(task){};
     
     Task task() {return mTask;}
     void* data() {return mData.data();}

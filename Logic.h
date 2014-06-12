@@ -10,6 +10,8 @@
 #define __DistriSpectral__Logic__
 
 #include <iostream>
+#include <mutex>
+#include <condition_variable>
 
 #endif /* defined(__DistriSpectral__Logic__) */
 
@@ -25,7 +27,7 @@
 
 class Logic {
     
-    //friend class Callback_S1;
+    friend class Callback_S1;
     
 public:
     
@@ -42,6 +44,7 @@ public:
     void initialize();
     void test();
     void test_initial();
+    void finish();
     //void terminate();
     
     
@@ -49,12 +52,13 @@ public:
 private:
     //int mNumProc;
     vector<ChunkInfo> mChunkVec;
-    
+
     Master* mDispatcher;
-    
-    
-    //int mTotalResult;
-    //Eigen::MatrixXd mBufMatrix;
+
+
+    std::mutex              mState_mutex;
+    std::condition_variable mState_condition;
+    int mWait;
     
     // Temporary data (Should be removed in the future)
     DataGenerator *data;
@@ -76,7 +80,6 @@ public:
         }
         mTargetResult = target;
         mCurrentResult = 0;
-        
     }
     
     void notify(void* data) {
@@ -87,21 +90,24 @@ public:
         
         if (++mCurrentResult == mTargetResult) {
             cout << endl <<"Final Result!!" << mResult << endl;
-            cout << endl << "Final check!!" << mLogic->check << endl;
+
             // Pass the result to mLogig
-            //mLogic->mBufMatrix += matrix;
+            // mLogic->mBufMatrix += matrix;
+            
+            {
+                std::unique_lock<std::mutex> lock(mLogic->mState_mutex);
+                mLogic->mWait = 0;
+            }
+            mLogic->mState_condition.notify_one();
             
             delete this;
         }
-        //mLogic->mBufMatrix += matrix;
-        //mLogic->aggregate(matrix);
     }
+
 private:
     int mSize[2];
     Logic* mLogic;
     Eigen::MatrixXd mResult;
     int mTargetResult;
     int mCurrentResult;
-    
-    
 };

@@ -24,14 +24,15 @@ using namespace Eigen;
 using namespace std;
 
 //#define BUF_SIZE 10*10
-#define AROW 1000
-#define ACOL 1000
-#define BROW 1000
-#define BCOL 1000
-#define BUF_SIZE AROW*BCOL
+//#define AROW 1000
+//#define ACOL 1000
+//#define BROW 1000
+//#define BCOL 1000
+//#define BUF_SIZE AROW*BCOL
 
 static const int DBG=0;
 
+/*
 MatrixXd distri_mul(MatrixXd X1, MatrixXd X2, int numprocs) {
     
     MPI_Status Stat;
@@ -88,13 +89,12 @@ MatrixXd distri_mul(MatrixXd X1, MatrixXd X2, int numprocs) {
     
     return ret;
 }
+*/
+
 
 int main( int argc, char *argv[] )
 {
     int myid, numprocs;
-    int istart,iend,sum=0,psum=0,i;
-    vector<double> buffer(BUF_SIZE);
-    
 
     /* Initialize the MPI execution environment */
     MPI_Init(&argc,&argv);
@@ -105,50 +105,30 @@ int main( int argc, char *argv[] )
     /*Determines the rank of the calling process in the communicator */
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     
-    MatrixXd C;
     /* Send the data to only one in cluster*/
     if(myid==0) {
         
         Master master(numprocs);
-        //master.run();
-        //std::thread a(&Master::sender, &master);
-        std::thread b(&Master::receiver, &master);
+
+        std::thread sender(&Master::sender, &master);
+        std::thread receiver(&Master::receiver, &master);
         
         Logic logic(master);
-        //logic.start();
+        logic.start();
         
-        
-        std::thread c(&Logic::start, &logic);
-        
-        master.sender();
-        
-        /*
+        sender.join();
+        receiver.join();
 
-        cout << endl<<"Master: numprocs:" << numprocs << endl;
-
-        MatrixXd A = MatrixXd::Random(AROW,ACOL);
-        MatrixXd B = MatrixXd::Random(BROW,BCOL);
-        
-        cout << endl<<"Master: Calculating the correct answer" << endl;
-        MatrixXd correct = A*B;
-
-        cout << endl <<"Master: Start Distributed calculation" << endl;
-        MatrixXd result = distri_mul(A,B, numprocs);
-        
-    	MatrixXd error = correct - result;
-        cout << endl << "Error =" << error.sum() << endl;
-        cout << "VECTOR VERSION"; */
     }
-    
-    /*In process1: block until you get data from root process*/
     
     else {
         Slave* slave = new Slave(myid);
         slave->run();
 
     }
-    
+  
     /* Terminate MPI execution environment */
     MPI_Finalize();
+    
     return 0;
 }
