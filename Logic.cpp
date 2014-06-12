@@ -53,6 +53,8 @@ void Logic::initialize() {
     Callback_S1* curCb = new Callback_S1(retSize, nChunk, this);
     curCb->setname("This is");
     
+    check = Eigen::MatrixXd::Zero(nDimension, nTarget);
+    
     for (int i=0; i<nChunk; i++) {
         
         cout << endl << " i="<< i << "  nChunk=" << nChunk;
@@ -60,7 +62,7 @@ void Logic::initialize() {
         int size[2] = {nDimension, nCol};
         Task task(Task::INITIAL, size, nTarget);
         TaskParcel tp(task, data->X().middleCols(mChunkVec.at(i).start(), nCol), curCb);
-
+        check += data->X().middleCols(mChunkVec.at(i).start(), nCol);
         mDispatcher->submit(tp);
     }
     

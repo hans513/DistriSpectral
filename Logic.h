@@ -25,7 +25,7 @@
 
 class Logic {
     
-    friend class Callback_S1;
+    //friend class Callback_S1;
     
 public:
     
@@ -44,6 +44,8 @@ public:
     void test_initial();
     //void terminate();
     
+    
+        Eigen::MatrixXd check;
 private:
     //int mNumProc;
     vector<ChunkInfo> mChunkVec;
@@ -56,6 +58,8 @@ private:
     
     // Temporary data (Should be removed in the future)
     DataGenerator *data;
+    
+
   
 };
 
@@ -76,14 +80,14 @@ public:
     }
     
     void notify(void* data) {
-        cout << endl <<"Notify!!" << endl;
+        cout << endl <<"Notify!!  " << mCurrentResult  << endl;
         Eigen::MatrixXd matrix = Eigen::Map<Eigen::MatrixXd>((double*)data, mSize[0], mSize[1]);
         
         mResult += matrix;
         
         if (++mCurrentResult == mTargetResult) {
             cout << endl <<"Final Result!!" << mResult << endl;
-
+            cout << endl << "Final check!!" << mLogic->check << endl;
             // Pass the result to mLogig
             //mLogic->mBufMatrix += matrix;
             

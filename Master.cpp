@@ -65,7 +65,7 @@ void Master::receiver() {
         vector<double> buffer(dataSize);
         MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, &status);
         
-        if (DBG) cout << endl <<"Master receiver <<==: receive from to slave " << status.MPI_SOURCE << endl;
+        if (DBG) cout << endl <<"Master receiver <<==: receive from slave " << status.MPI_SOURCE << endl;
         
         cout << endl <<"Master receiver <<==: receiver mCallbackVec size:" << mCallbackVec.size() << endl;
 
@@ -77,7 +77,7 @@ void Master::receiver() {
         // Callback function knows how to handle data
         mCallbackVec.at(status.MPI_SOURCE)->notify(&buffer[0]);
         
-        delete mCallbackVec.at(status.MPI_SOURCE);
+        //delete mCallbackVec.at(status.MPI_SOURCE);
         cout << endl <<"Master receiver <<==: Check"<< endl;
         cout << endl <<"Master receiver <<==: Check"<< endl;
         

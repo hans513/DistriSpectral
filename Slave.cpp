@@ -46,8 +46,7 @@ void Slave::run() {
             // Send the data matrix chunk
             {case Task::INITIAL:
                 
-                
-                
+ 
                 if (DBG) {
                     cout << "Remote >> mId:" << mId << " Task::INITIAL" <<endl;
                 }
@@ -81,7 +80,7 @@ void Slave::run() {
         }
     
         if (DBG) {
-            cout << "Remote >> mId:" << mId << " Finish task" <<endl;
+            cout << endl << "Remote >> mId:" << mId << " Finish task" <<endl;
         }
        
         
@@ -118,6 +117,7 @@ void Slave::initialWork(MatrixXd input, int target) {
     default_random_engine generator(rd());
     normal_distribution<double> normal_distri(0, 1);
     
+    
     MatrixXd gausssian(input.cols(), target);
     
     for (int i=0; i<gausssian.rows(); i++) {
@@ -126,10 +126,11 @@ void Slave::initialWork(MatrixXd input, int target) {
         }
     }
     
-      cout << endl << "Remote >> mId:" << mId << " matrix got: " <<input.rows() << "  " << input.cols();
+    cout << endl << "Remote >> mId:" << mId << " matrix got: " <<input.rows() << "  " << input.cols();
     cout << endl << "Remote >> mId:" << mId << " gaussian got: " <<gausssian.rows() << "  " << gausssian.cols();
     
-    MatrixXd result = input*gausssian;
+    MatrixXd result = input;
+    //MatrixXd result = input*gausssian;
     
     cout << endl << "Remote >> mId:" << mId << " InitialWork Sending result back";
     MPI_Send(result.data(), result.size(), MPI_DOUBLE, MASTER_ID, Task::RETURN_TAG, MPI_COMM_WORLD);
