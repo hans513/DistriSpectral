@@ -50,30 +50,54 @@ private:
     
     Master* mDispatcher;
     
-    Eigen::MatrixXd mBufMatrix;
+    
+    //int mTotalResult;
+    //Eigen::MatrixXd mBufMatrix;
     
     // Temporary data (Should be removed in the future)
     DataGenerator *data;
-    
+  
 };
+
+
 
 
 class Callback_S1 : public Callback {
     
 public:
-    Callback_S1(int size[2], Logic* logic): mLogic(logic) {
-        if (size!=NULL) memcpy( mSize, size, sizeof(mSize));
+    Callback_S1(int size[2], int target, Logic* logic): mLogic(logic) {
+        if (size!=NULL) {
+            memcpy( mSize, size, sizeof(mSize));
+            mResult = Eigen::MatrixXd::Zero(mSize[0], mSize[1]);
+        }
+        mTargetResult = target;
+        mCurrentResult = 0;
+        
     }
     
     void notify(void* data) {
         cout << endl <<"Notify!!" << endl;
-        cout << endl <<"Notify!!" << endl;
-        cout << endl <<"Notify!!" << endl;
-        cout << endl <<"Notify!!" << endl;
         Eigen::MatrixXd matrix = Eigen::Map<Eigen::MatrixXd>((double*)data, mSize[0], mSize[1]);
-        mLogic->mBufMatrix += matrix;
+        
+        mResult += matrix;
+        
+        if (++mCurrentResult == mTargetResult) {
+            cout << endl <<"Final Result!!" << mResult << endl;
+
+            // Pass the result to mLogig
+            //mLogic->mBufMatrix += matrix;
+            
+            delete this;
+        }
+        //mLogic->mBufMatrix += matrix;
+        //mLogic->aggregate(matrix);
     }
 private:
     int mSize[2];
     Logic* mLogic;
+    Eigen::MatrixXd mResult;
+    int mTargetResult;
+    int mCurrentResult;
+    
+    
 };

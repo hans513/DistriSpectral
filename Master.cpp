@@ -77,6 +77,7 @@ void Master::receiver() {
         // Callback function knows how to handle data
         mCallbackVec.at(status.MPI_SOURCE)->notify(&buffer[0]);
         
+        delete mCallbackVec.at(status.MPI_SOURCE);
         cout << endl <<"Master receiver <<==: Check"<< endl;
         cout << endl <<"Master receiver <<==: Check"<< endl;
         
