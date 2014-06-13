@@ -41,7 +41,7 @@ void Master::sender() {
                 if (DBG) cout << endl <<"Master sender ==>>: send task " << current.task().cmd() << " to slave " << slave;
                 
                 // register callback function when the task return
-                cout << endl << "MASTER:: setCallback for" << slave_id;
+                cout << endl << "MASTER:: setCallback for" << slave;
                 mCallbackVec.at(slave) = current.callback();
                 //Callback* cb = mCallbackVec.at(slave);
                 
