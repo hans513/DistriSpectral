@@ -23,12 +23,15 @@ void Logic::start() {
     
     MatrixXd basis = calculateBasis(rpj, p);
     
-        cout << endl << endl << "BASIS="  << basis << endl << endl << endl;
-    
+    cout << endl << endl << "BASIS="  << basis << endl << endl << endl;
     
     MatrixXd Z = computeZ(basis);
     
     cout << endl << "Z=" << Z;
+    
+    
+    
+    
     
     finish();
 

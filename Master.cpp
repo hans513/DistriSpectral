@@ -90,7 +90,7 @@ void Master::receiver() {
     
     while (!mExit) {
         
-        cout << endl <<"Master receiver <<==: receiver prepare to receive next msg size:" << endl;
+        cout << endl <<"Master receiver <<==: Receiver wait to receive next msg" << endl;
         
         // May Block here
         MPI_Probe(MPI_ANY_SOURCE, Task::RETURN_TAG, MPI_COMM_WORLD, &status);

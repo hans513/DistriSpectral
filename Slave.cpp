@@ -68,8 +68,6 @@ void Slave::run() {
                 if (DBG) cout << endl <<"Remote >> mId:" << mId << " Task::BASIS_MUL" <<endl;
                 
                 if (DBG) cout << endl <<"Remote >> mId:" << mId << " Task::BASIS_MUL  MPI_Barrier" <<endl;
-
-                
                 long dataSize = task->size()[0]*task->size()[1];
                 vector<double> buffer(dataSize);
                 
@@ -129,10 +127,9 @@ void Slave::initialWork(MatrixXd input, int target) {
  */
 void Slave::basisMul(Eigen::MatrixXd basis) {
     
+    if (DBG) cout << endl <<"Remote >> mId:" << mId << " Task::basisMul" <<endl;
+    
     MatrixXd result = MatrixXd::Zero(basis.cols(),basis.cols());
-    
-
-    
 
     for (int i=0; i<dataVec.size(); i++) {
         
