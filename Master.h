@@ -70,6 +70,12 @@ private:
     
     vector<Callback*> mCallbackVec;
     
+    void printCallback () {  
+        for (int i=0; i<mCallbackVec.size(); i++) {
+            cout << endl << "mCallbackVec " << i << " " << mCallbackVec.at(i);
+        }
+    }
+    
     // The state of slvae: 0 = free, 1 = busy
     //vector<int> mSlaveState;
     

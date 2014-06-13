@@ -56,6 +56,7 @@ private:
     Eigen::MatrixXd initialize(int nTarget);
     Eigen::MatrixXd calculateBasis(Eigen::MatrixXd rpj, int nTarget);
     Eigen::MatrixXd computeZ(Eigen::MatrixXd basis);
+    Eigen::MatrixXd calculateWhiten(Eigen::MatrixXd bpj);
     
     // The info of the split matrices
     vector<ChunkInfo> mChunkVec;

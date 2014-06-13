@@ -68,7 +68,8 @@ void Master::sender() {
                 }
                 
                 
-                for (int i=0; i<mCallbackVec.size(); i++) cout << endl << "MASTER:: mCallbackVec " << i << " " << mCallbackVec.at(i);
+                cout << endl <<"Master sender ==>> after set callback printCallback()";
+                printCallback ();
                 
                 cout << endl << "Master sender ==>> BASIS_MUL MPI_Barrier "<<endl;
                 //MPI_Barrier(MPI_COMM_WORLD);
@@ -107,7 +108,7 @@ void Master::receiver() {
         
         if (DBG) cout << endl <<"Master receiver <<==: receive from slave " << status.MPI_SOURCE << endl;
         
-        for (int i=0; i<mCallbackVec.size(); i++) cout << endl << "mCallbackVec " << i << " " << mCallbackVec.at(i);
+        printCallback();
         
         // Callback function knows how to handle data
         if (mCallbackVec.at(status.MPI_SOURCE) != NULL) {
@@ -118,6 +119,9 @@ void Master::receiver() {
         }
         
         else cout << endl << "Master receiver <<==: No callback";
+        
+        cout << endl <<"Master receiver <<==: after callback printCallback()";
+        printCallback ();
 
         // Put the slave back to available pool
         mAvailSlave.push(status.MPI_SOURCE);

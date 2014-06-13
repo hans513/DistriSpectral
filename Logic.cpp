@@ -30,7 +30,7 @@ void Logic::start() {
     cout << endl << "Z=" << Z;
     
     
-    
+    MatrixXd calculateWhiten(Z);
     
     
     finish();
@@ -148,6 +148,11 @@ void Logic::computeZ_cb() {
         mWait = 0;
     }
     mState_condition.notify_one();
+}
+
+MatrixXd Logic::calculateWhiten(MatrixXd bpj) {
+    
+    
 }
 
 void Logic::finish() {
