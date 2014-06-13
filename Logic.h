@@ -89,7 +89,7 @@ public:
 
         Eigen::MatrixXd matrix = Eigen::Map<Eigen::MatrixXd>((double*)data, mSize[0], mSize[1]);
         
-        cout << endl <<"Notify!!  " << mCurrentResult  << "  "  << mTargetResult<< endl;
+        cout << endl <<"Notify!!!!  " << mCurrentResult  << "  "  << mTargetResult<< endl;
         
         mResult += matrix;
         

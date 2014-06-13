@@ -68,12 +68,13 @@ void Slave::run() {
                 if (DBG) cout << endl <<"Remote >> mId:" << mId << " Task::BASIS_MUL" <<endl;
                 
                 if (DBG) cout << endl <<"Remote >> mId:" << mId << " Task::BASIS_MUL  MPI_Barrier" <<endl;
-                MPI_Barrier(MPI_COMM_WORLD);
-                if (DBG) cout << endl <<"Remote >> mId:" << mId << " Task::BASIS_MUL  pass MPI_Barrier" <<endl;
+
                 
                 long dataSize = task->size()[0]*task->size()[1];
                 vector<double> buffer(dataSize);
                 
+                //MPI_Barrier(MPI_COMM_WORLD);
+                if (DBG) cout << endl <<"Remote >> mId:" << mId << " Task::BASIS_MUL  pass MPI_Barrier" <<endl;
                 MPI_Bcast(&buffer[0], dataSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
                 MatrixXd matrix = Map<MatrixXd>(&buffer[0], task->size()[0], task->size()[1]);
                 

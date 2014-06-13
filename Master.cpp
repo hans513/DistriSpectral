@@ -55,7 +55,7 @@ void Master::sender() {
             }
                 
             {case Task::BASIS_MUL:
-                if (DBG) cout << "Master sender ==>> BASIS_MUL task "<<endl;
+                if (DBG) cout << endl << "Master sender ==>> BASIS_MUL task "<<endl;
                 for (int slave_id=1; slave_id<mNumProc; slave_id++) {
                     MPI_Send(&task, sizeof(Task), MPI_CHAR, slave_id, 0, MPI_COMM_WORLD);
                    
@@ -66,9 +66,8 @@ void Master::sender() {
                 }
                 
                 cout << "Master sender ==>> BASIS_MUL MPI_Barrier "<<endl;
-                MPI_Barrier(MPI_COMM_WORLD);
-                 cout << "Master sender ==>> BASIS_MUL pass MPI_Barrier "<<endl;
-                
+                //MPI_Barrier(MPI_COMM_WORLD);
+                cout << "Master sender ==>> BASIS_MUL pass MPI_Barrier "<<endl;
                 MPI_Bcast(current.data(), current.dataSize(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
                 break;
             }
