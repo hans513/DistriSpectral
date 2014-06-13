@@ -46,12 +46,13 @@ public:
     
     static const int TERMINATE = -1;
     static const int INITIAL = 1;
+    static const int BASIS_MUL = 2;
     static const int MULTIPLY = 10;
     static const int TEST = 99;
     
     static const int RETURN_TAG = 9;
     
-    Task(int cmd, int size[2]=NULL, int info=0): mCmd(cmd), mInfo(info) {
+    Task(int cmd, long size[2]=NULL, int info=0): mCmd(cmd), mInfo(info) {
         if (size!=NULL) memcpy( mSize, size, sizeof(mSize));
     }
     
@@ -59,7 +60,7 @@ public:
         return mCmd;
     }
     
-    int* size() {
+    long* size() {
         return mSize;
     }
     
@@ -69,7 +70,7 @@ public:
     
 private:
     int mCmd;
-    int mSize[2];
+    long mSize[2];
     int mInfo;
     
 };
@@ -89,6 +90,8 @@ public:
     void* data() {return mData.data();}
     int dataSize(){return mData.size();}
     Callback* callback() {return mCallback;}
+    
+    Eigen::MatrixXd matrix() {return mData;}
     
 private:
     Task mTask;

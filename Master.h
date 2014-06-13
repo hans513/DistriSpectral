@@ -12,7 +12,6 @@
 #include <iostream>
 #include <thread>
 #include <vector>
-
 #include <Eigen/Dense>
 #include "mpi.h"
 
@@ -36,6 +35,8 @@
 #endif
 
 class Master {
+    
+    typedef Callback Callback_S1;
     
 public:
     

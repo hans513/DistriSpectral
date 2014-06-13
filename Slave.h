@@ -34,9 +34,11 @@ public:
     
     void run();
     void initialWork(Eigen::MatrixXd input, int target);
+    void basisMul(Eigen::MatrixXd);
     
 private:
     
     int mId;
+    vector<Eigen::MatrixXd> dataVec;
     
 };

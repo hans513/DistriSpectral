@@ -29,6 +29,15 @@ void Slave::run() {
         
         if (DBG) cout << endl << "Remote >> mId:" << mId << " Got task:" <<task->cmd();
         
+        /*
+        if (task->cmd()==Task::TERMINATE) {
+            cout << endl << "Remote >> mId:" << mId << " TERMINATE!"<< endl;
+            exit=1;
+            break;
+        }
+        */
+    
+        
         // Decide what task to do
         switch (task->cmd()) {
             
@@ -37,25 +46,38 @@ void Slave::run() {
                 exit=1;
                 break;
             }
-                
-                
+             
             // Receive the data matrix chunk
             {case Task::INITIAL:
-                
                 if (DBG) cout << "Remote >> mId:" << mId << " Task::INITIAL" <<endl;
-                
                 int dataSize;
                 MPI_Probe(MASTER_ID, 1, MPI_COMM_WORLD, &status);
                 MPI_Get_count(&status, MPI_DOUBLE, &dataSize);
-
+                
                 vector<double> buffer(dataSize);
                 MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, MASTER_ID, 1, MPI_COMM_WORLD, &status);
-
+                
                 MatrixXd matrix = Map<MatrixXd>(&buffer[0], task->size()[0], task->size()[1]);
                 
-                if (DBG) cout << endl << "Remote >> mId:" << mId << " Task::INITIAL  data received";
-                
+                if (DBG) cout << endl << "Remote >> mId:" << mId << " data received" << endl << "@@@@@@@@" << matrix;
                 initialWork(matrix, task->info());
+                break;
+            }
+                
+            {case Task::BASIS_MUL:
+                if (DBG) cout << endl <<"Remote >> mId:" << mId << " Task::BASIS_MUL" <<endl;
+                
+                if (DBG) cout << endl <<"Remote >> mId:" << mId << " Task::BASIS_MUL  MPI_Barrier" <<endl;
+                MPI_Barrier(MPI_COMM_WORLD);
+                if (DBG) cout << endl <<"Remote >> mId:" << mId << " Task::BASIS_MUL  pass MPI_Barrier" <<endl;
+                
+                long dataSize = task->size()[0]*task->size()[1];
+                vector<double> buffer(dataSize);
+                
+                MPI_Bcast(&buffer[0], dataSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+                MatrixXd matrix = Map<MatrixXd>(&buffer[0], task->size()[0], task->size()[1]);
+                
+                basisMul(matrix);
                 
                 break;
             }
@@ -79,8 +101,8 @@ void Slave::run() {
  */
 void Slave::initialWork(MatrixXd input, int target) {
     
-    cout << endl << "Remote >> mId:" << mId << " InitialWork";
-
+    dataVec.push_back(input);
+    
     srand (time(NULL));
     random_device rd;
     default_random_engine generator(rd());
@@ -96,7 +118,33 @@ void Slave::initialWork(MatrixXd input, int target) {
     
     MatrixXd result = input * gausssian;
     
-    cout << endl << "Remote >> mId:" << mId << " InitialWork Sending result back";
+    cout << endl << "Remote >> mId:" << mId << " InitialWork Sending result back" << endl <<result;
     MPI_Send(result.data(), result.size(), MPI_DOUBLE, MASTER_ID, Task::RETURN_TAG, MPI_COMM_WORLD);
+}
+
+
+/**
+ State 3: Basis multiplication
+ */
+void Slave::basisMul(Eigen::MatrixXd basis) {
     
+    MatrixXd result = MatrixXd::Zero(basis.cols(),basis.cols());
+    
+
+    
+
+    for (int i=0; i<dataVec.size(); i++) {
+        
+        cout << endl << "basis cols >> mId:" << basis.rows() << "  "  << dataVec.at(i).rows();
+        
+        MatrixXd temp = basis.transpose()*dataVec.at(i);
+        
+        cout << endl << "basis cols >> mId:" << basis.rows() << "  "  << dataVec.at(i).rows();
+
+        
+        result += temp * temp.transpose();
+    }
+
+    cout << endl << "Remote >> mId:" << mId << " basisMul Sending result back  result" << endl << result;
+    MPI_Send(result.data(), result.size(), MPI_DOUBLE, MASTER_ID, Task::RETURN_TAG, MPI_COMM_WORLD);
 }

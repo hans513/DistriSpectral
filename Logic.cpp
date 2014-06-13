@@ -15,9 +15,20 @@ using namespace Eigen;
 void Logic::start() {
     
     mWait = 0;
-    MatrixXd rpj = initialize();
     
-    qrDecompostion(rpj);
+    
+    int p = 4;
+    
+    MatrixXd rpj = initialize(p);
+    
+    MatrixXd basis = calculateBasis(rpj, p);
+    
+        cout << endl << endl << "BASIS="  << basis << endl << endl << endl;
+    
+    
+    MatrixXd Z = computeZ(basis);
+    
+    cout << endl << "Z=" << Z;
     
     finish();
 
@@ -25,7 +36,7 @@ void Logic::start() {
 
 
 // Split data or generate data info here
-MatrixXd Logic::initialize() {
+MatrixXd Logic::initialize(int nTarget) {
     
     int nDimension = 4;
     int nGaussian = 2;
@@ -34,7 +45,7 @@ MatrixXd Logic::initialize() {
     double unitRadius =10;
     
     int nChunk = 4;
-    int nTarget = 5;
+
     
     //For a large data input we want to split it here;
     data = new DataGenerator(nDimension, nGaussian, nDataPerGaussian, pow(noise,0.5), unitRadius);
@@ -45,8 +56,8 @@ MatrixXd Logic::initialize() {
     mChunkVec.push_back(ChunkInfo((nChunk-1)*blk, data->X().cols()));
 
     
-    int retSize[2] = {nDimension, nTarget};
-    Callback_S1* callback = new Callback_S1(retSize, nChunk, this);
+    long retSize[2] = {nDimension, nTarget};
+    Callback_S1* callback = new Callback_S1(retSize, nChunk, this, &Logic::initialize_cb);
 
     {
         std::unique_lock<std::mutex> lock(mState_mutex);
@@ -54,8 +65,8 @@ MatrixXd Logic::initialize() {
     }
     
     for (int i=0; i<nChunk; i++) {
-        int nCol = mChunkVec.at(i).end()-mChunkVec.at(i).start();
-        int size[2] = {nDimension, nCol};
+        long nCol = mChunkVec.at(i).end()-mChunkVec.at(i).start();
+        long size[2] = {nDimension, nCol};
         Task task(Task::INITIAL, size, nTarget);
         TaskParcel tp(task, data->X().middleCols(mChunkVec.at(i).start(), nCol), callback);
         mDispatcher->submit(tp);
@@ -82,9 +93,58 @@ void Logic::initialize_cb() {
 
 }
 
-void Logic::qrDecompostion(MatrixXd rpj) {
+// TODO: shoud I use svd instead?
+MatrixXd Logic::calculateBasis(MatrixXd rpj, int nTarget) {
+    
+    //const JacobiSVD<MatrixXd> svd(rpj, ComputeThinU | ComputeThinV);
+    //MatrixXd Ub = svd.matrixU();
+    
+    HouseholderQR<MatrixXd> qr(rpj);
+    MatrixXd Q = MatrixXd::Identity(rpj.rows(),nTarget);
+    Q = qr.householderQ() * Q;
+
+    return Q;
+}
+
+MatrixXd Logic::computeZ(MatrixXd basis) {
+
+
+    long retSize[2] = {basis.cols(), basis.cols()};
+    
+    // TODO 2=nprocess
+    Callback_S1* callback = new Callback_S1(retSize, 2, this, &Logic::computeZ_cb);
+    
+    {
+        std::unique_lock<std::mutex> lock(mState_mutex);
+        mWait = 1;
+    }
+    
+
+    long size[2] = {basis.cols(), basis.cols()};
+    Task task(Task::BASIS_MUL, size);
+    TaskParcel tp(task, basis, callback);
+    mDispatcher->submit(tp);
+
+    cout << endl << "Logic ==============> start to wait";
+    std::unique_lock<std::mutex> lock(mState_mutex);
+    mState_condition.wait(lock);
+    cout << endl << "Logic ==============> finish waiting";
+    
+    MatrixXd result = callback->result();
+    delete callback;
+    
+    return result;
     
     
+}
+
+void Logic::computeZ_cb() {
+
+    {
+        std::unique_lock<std::mutex> lock(mState_mutex);
+        mWait = 0;
+    }
+    mState_condition.notify_one();
 }
 
 void Logic::finish() {
@@ -106,7 +166,7 @@ void Logic::test_initial() {
     MatrixXd a(3,3);
     a << 1,2,3,4,5,6,7,8,9;
     
-    int size[]={3,3};
+    long size[]={3,3};
     
     Task task(Task::INITIAL, size);
     
