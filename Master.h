@@ -12,6 +12,7 @@
 #include <iostream>
 #include <thread>
 #include <vector>
+#include <mutex>
 #include <Eigen/Dense>
 #include "mpi.h"
 
@@ -69,6 +70,8 @@ private:
     BlockingQueue<int> mAvailSlave;
     
     vector<Callback*> mCallbackVec;
+    
+    std::mutex  mCallback_mutex;
     
     void printCallback () {  
         for (int i=0; i<mCallbackVec.size(); i++) {

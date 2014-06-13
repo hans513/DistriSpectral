@@ -42,7 +42,11 @@ void Master::sender() {
                 
                 // register callback function when the task return
                 cout << endl << "MASTER:: setCallback for" << slave;
-                mCallbackVec.at(slave) = current.callback();
+                
+                {
+                    std::unique_lock<std::mutex> lock(mCallback_mutex);
+                    mCallbackVec.at(slave) = current.callback();
+                }
                 //Callback* cb = mCallbackVec.at(slave);
                 
                 
@@ -64,7 +68,10 @@ void Master::sender() {
                     Callback_S1* cb = current.callback();
                     // TODO
                     //cb->setTargetResult(mNumProc);
-                    mCallbackVec.at(slave_id) = current.callback();
+                    {
+                        std::unique_lock<std::mutex> lock(mCallback_mutex);
+                        mCallbackVec.at(slave_id) = current.callback();
+                    }
                 }
                 
                 
@@ -110,15 +117,19 @@ void Master::receiver() {
         
         printCallback();
         
+        {
+            std::unique_lock<std::mutex> lock(mCallback_mutex);
         // Callback function knows how to handle data
-        if (mCallbackVec.at(status.MPI_SOURCE) != NULL) {
-            cout << endl << "Master receiver <<==: Calling callback   slave:"  << status.MPI_SOURCE;
+            if (mCallbackVec.at(status.MPI_SOURCE) != NULL) {
+                cout << endl << "Master receiver <<==: Calling callback   slave:"  << status.MPI_SOURCE;
 
-            mCallbackVec.at(status.MPI_SOURCE)->notify(&buffer[0]);
-            mCallbackVec.at(status.MPI_SOURCE) = NULL;
+                mCallbackVec.at(status.MPI_SOURCE)->notify(&buffer[0]);
+                mCallbackVec.at(status.MPI_SOURCE) = NULL;
+            }
+            else cout << endl << "Master receiver <<==: No callback";
         }
         
-        else cout << endl << "Master receiver <<==: No callback";
+       
         
         cout << endl <<"Master receiver <<==: after callback printCallback()";
         printCallback ();
