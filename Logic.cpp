@@ -15,13 +15,9 @@ using namespace Eigen;
 void Logic::start() {
     
     mWait = 0;
-    initialize();
+    MatrixXd rpj = initialize();
     
-    cout << endl << "Logic ==============> start to wait";
-
-    std::unique_lock<std::mutex> lock(mState_mutex);
-    mState_condition.wait(lock);
-    cout << endl << "Logic ==============> finish waiting";
+    qrDecompostion(rpj);
     
     finish();
 
@@ -29,7 +25,7 @@ void Logic::start() {
 
 
 // Split data or generate data info here
-void Logic::initialize() {
+MatrixXd Logic::initialize() {
     
     int nDimension = 4;
     int nGaussian = 2;
@@ -64,6 +60,31 @@ void Logic::initialize() {
         TaskParcel tp(task, data->X().middleCols(mChunkVec.at(i).start(), nCol), callback);
         mDispatcher->submit(tp);
     }
+    
+    cout << endl << "Logic ==============> start to wait";
+    std::unique_lock<std::mutex> lock(mState_mutex);
+    mState_condition.wait(lock);
+    cout << endl << "Logic ==============> finish waiting";
+    
+    MatrixXd result = callback->result();
+    delete callback;
+    
+    return result;
+}
+
+void Logic::initialize_cb() {
+ 
+    {
+        std::unique_lock<std::mutex> lock(mState_mutex);
+        mWait = 0;
+    }
+    mState_condition.notify_one();
+
+}
+
+void Logic::qrDecompostion(MatrixXd rpj) {
+    
+    
 }
 
 void Logic::finish() {

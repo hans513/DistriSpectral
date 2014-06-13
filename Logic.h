@@ -41,7 +41,9 @@ public:
     }
     
     void start();
-    void initialize();
+    Eigen::MatrixXd initialize();
+    void initialize_cb();
+    void qrDecompostion(Eigen::MatrixXd rpj);
     void finish();
 
     ////////////
@@ -62,7 +64,6 @@ private:
     std::mutex              mState_mutex;
     std::condition_variable mState_condition;
     int mWait;
-    
     
     // Temporary data (Should be removed in the future)
     DataGenerator *data;
@@ -91,20 +92,11 @@ public:
         mResult += matrix;
         
         if (++mCurrentResult == mTargetResult) {
-            if (Logic::DBG) cout << endl <<"Final Result!!" << mResult << endl;
-
-            // Pass the result to mLogig
-            // mLogic->mBufMatrix += matrix;
-            
-            {
-                std::unique_lock<std::mutex> lock(mLogic->mState_mutex);
-                mLogic->mWait = 0;
-            }
-            mLogic->mState_condition.notify_one();
-            
-            delete this;
+            mLogic->initialize_cb();
         }
     }
+    
+    Eigen::MatrixXd result() {return mResult;}
 
 private:
     
