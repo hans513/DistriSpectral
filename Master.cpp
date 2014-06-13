@@ -102,9 +102,11 @@ void Master::receiver() {
         
         if (DBG) cout << endl <<"Master receiver <<==: receive from slave " << status.MPI_SOURCE << endl;
         
+        for (int i=0; i<mCallbackVec.size(); i++) cout << endl << "mCallbackVec " << i << " " << mCallbackVec.at(i);
+        
         // Callback function knows how to handle data
         if (mCallbackVec.at(status.MPI_SOURCE) != NULL) {
-            cout << endl << "Master receiver <<==: Calling callback";
+            cout << endl << "Master receiver <<==: Calling callback   slave:"  << status.MPI_SOURCE;
 
             mCallbackVec.at(status.MPI_SOURCE)->notify(&buffer[0]);
             mCallbackVec.at(status.MPI_SOURCE) = NULL;
