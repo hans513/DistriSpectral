@@ -77,7 +77,7 @@ void Master::receiver() {
 
     }
 
-    cout << endl <<"Master receiver EXIT";
+    cout << endl <<"Master receiver EXIT" << endl;
 }
 
 void Master::submit(TaskParcel parcel) {

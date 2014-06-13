@@ -39,7 +39,7 @@ void Slave::run() {
             }
                 
                 
-            // Send the data matrix chunk
+            // Receive the data matrix chunk
             {case Task::INITIAL:
                 
                 if (DBG) cout << "Remote >> mId:" << mId << " Task::INITIAL" <<endl;
@@ -74,6 +74,9 @@ void Slave::run() {
     }
 }
 
+/**
+ State 1: Random projection
+ */
 void Slave::initialWork(MatrixXd input, int target) {
     
     cout << endl << "Remote >> mId:" << mId << " InitialWork";

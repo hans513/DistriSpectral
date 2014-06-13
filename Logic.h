@@ -42,17 +42,20 @@ public:
     
     void start();
     void initialize();
+    void finish();
+
+    ////////////
     void test();
     void test_initial();
-    void finish();
-    //void terminate();
     
-    
-        Eigen::MatrixXd check;
+    Eigen::MatrixXd check;
+
 private:
-    //int mNumProc;
+
+    // The info of the split matrices
     vector<ChunkInfo> mChunkVec;
 
+    // For dispatching tasks
     Master* mDispatcher;
 
 
@@ -60,10 +63,9 @@ private:
     std::condition_variable mState_condition;
     int mWait;
     
+    
     // Temporary data (Should be removed in the future)
     DataGenerator *data;
-    
-
   
 };
 
@@ -89,7 +91,7 @@ public:
         mResult += matrix;
         
         if (++mCurrentResult == mTargetResult) {
-            cout << endl <<"Final Result!!" << mResult << endl;
+            if (Logic::DBG) cout << endl <<"Final Result!!" << mResult << endl;
 
             // Pass the result to mLogig
             // mLogic->mBufMatrix += matrix;
@@ -105,9 +107,19 @@ public:
     }
 
 private:
-    int mSize[2];
+    
+    // Pointer to main logic class
     Logic* mLogic;
+    
+    // The dimension of the result matrix
+    int mSize[2];
+    
+    
     Eigen::MatrixXd mResult;
+    
+    // Number of result we are supposed to receive
     int mTargetResult;
+    
+    // Number of result we received
     int mCurrentResult;
 };

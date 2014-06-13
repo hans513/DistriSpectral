@@ -105,14 +105,18 @@ int main( int argc, char *argv[] )
     /*Determines the rank of the calling process in the communicator */
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     
-    /* Send the data to only one in cluster*/
+    // It's master node
     if(myid==0) {
         
         Master master(numprocs);
 
+        // The thread sends task to slaves
         std::thread sender(&Master::sender, &master);
+        
+        // The thread receive result from slave
         std::thread receiver(&Master::receiver, &master);
         
+        // Main Algorithm
         Logic logic(master);
         logic.start();
         
@@ -121,9 +125,11 @@ int main( int argc, char *argv[] )
 
     }
     
+    // It's slave node
     else {
-        Slave* slave = new Slave(myid);
-        slave->run();
+        
+        Slave slave(myid);
+        slave.run();
 
     }
   

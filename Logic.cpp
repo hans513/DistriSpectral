@@ -13,28 +13,18 @@ using namespace std;
 using namespace Eigen;
 
 void Logic::start() {
-    cout << endl << "Logic !! start";
     
     mWait = 0;
-    
-    cout << endl << "Logic ==============> prepare to wait";
-    
     initialize();
     
     cout << endl << "Logic ==============> start to wait";
-    cout << endl << "Logic ==============> start to wait";
+
     std::unique_lock<std::mutex> lock(mState_mutex);
     mState_condition.wait(lock);
     cout << endl << "Logic ==============> finish waiting";
     
     finish();
-    /*
-     cout << endl << "Master:Initial" << endl;
-     test_initial();
-     cout << endl << "Master:Terminate" << endl;
-     terminate();
-     cout << endl << "Master:Finish Terminate" << endl;
-     */
+
 }
 
 
@@ -79,8 +69,6 @@ void Logic::initialize() {
 void Logic::finish() {
     
     mDispatcher->terminate();
-    
-    cout << endl << "Logic ==============> finish ";
     cout << endl << "Logic ==============> finish ";
 }
 

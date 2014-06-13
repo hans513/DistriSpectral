@@ -17,11 +17,7 @@
 
 #endif
 
-
-
 class DataGenerator {
-
-
     
 public:
     
