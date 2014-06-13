@@ -104,9 +104,13 @@ void Master::receiver() {
         
         // Callback function knows how to handle data
         if (mCallbackVec.at(status.MPI_SOURCE) != NULL) {
+            cout << endl << "Master receiver <<==: Calling callback";
+
             mCallbackVec.at(status.MPI_SOURCE)->notify(&buffer[0]);
             mCallbackVec.at(status.MPI_SOURCE) = NULL;
         }
+        
+        else cout << endl << "Master receiver <<==: No callback";
 
         // Put the slave back to available pool
         mAvailSlave.push(status.MPI_SOURCE);

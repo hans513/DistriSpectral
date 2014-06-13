@@ -49,7 +49,7 @@ void Slave::run() {
              
             // Receive the data matrix chunk
             {case Task::INITIAL:
-                if (DBG) cout << "Remote >> mId:" << mId << " Task::INITIAL" <<endl;
+                if (DBG) cout << endl << "Remote >> mId:" << mId << " Task::INITIAL" <<endl;
                 int dataSize;
                 MPI_Probe(MASTER_ID, 1, MPI_COMM_WORLD, &status);
                 MPI_Get_count(&status, MPI_DOUBLE, &dataSize);
