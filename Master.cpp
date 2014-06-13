@@ -48,7 +48,7 @@ void Master::sender() {
                 MPI_Send(&task, sizeof(Task), MPI_CHAR, slave, 0, MPI_COMM_WORLD);
                 
                 if (current.data()==NULL) continue;
-                cout << endl <<"Master sender ==>>: send data to slave " << slave << endl << "DDDDDAAAATTTTTAA" << endl << current.matrix();
+                cout << endl <<"Master sender ==>>: send data to slave " << slave;
                 MPI_Send(current.data(), current.dataSize(), MPI_DOUBLE, slave, 1, MPI_COMM_WORLD);
                 break;
                 
@@ -57,6 +57,7 @@ void Master::sender() {
             {case Task::BASIS_MUL:
                 if (DBG) cout << endl << "Master sender ==>> BASIS_MUL task "<<endl;
                 for (int slave_id=1; slave_id<mNumProc; slave_id++) {
+                    cout << endl << "MASTER:: setCallback for " <<slave_id;
                     MPI_Send(&task, sizeof(Task), MPI_CHAR, slave_id, 0, MPI_COMM_WORLD);
                    
                     Callback_S1* cb = current.callback();
@@ -65,9 +66,12 @@ void Master::sender() {
                     mCallbackVec.at(slave_id) = current.callback();
                 }
                 
-                cout << "Master sender ==>> BASIS_MUL MPI_Barrier "<<endl;
+                
+                for (int i=0; i<mCallbackVec.size(); i++) cout << endl << "MASTER:: mCallbackVec " << i << " " << mCallbackVec.at(i);
+                
+                cout << endl << "Master sender ==>> BASIS_MUL MPI_Barrier "<<endl;
                 //MPI_Barrier(MPI_COMM_WORLD);
-                cout << "Master sender ==>> BASIS_MUL pass MPI_Barrier "<<endl;
+                cout << endl << "Master sender ==>> BASIS_MUL pass MPI_Barrier "<<endl;
                 MPI_Bcast(current.data(), current.dataSize(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
                 break;
             }
