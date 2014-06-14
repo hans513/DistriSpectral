@@ -44,25 +44,27 @@ public:
     void initialize_cb();
     void computeZ_cb();
     void finish();
-
-    ////////////
-    void test();
-    void test_initial();
     
     Eigen::MatrixXd check;
 
 private:
+    
+    int mK;
 
     Eigen::MatrixXd initialize(int nTarget);
     Eigen::MatrixXd calculateBasis(Eigen::MatrixXd rpj, int nTarget);
     Eigen::MatrixXd computeZ(Eigen::MatrixXd basis);
-    Eigen::MatrixXd calculateWhiten(Eigen::MatrixXd bpj);
+    Eigen::MatrixXd calculateWhiten(Eigen::MatrixXd bpj, Eigen::MatrixXd basis);
+    
+    Eigen::MatrixXd afterWhiten(Eigen::MatrixXd);
     
     // The info of the split matrices
     vector<ChunkInfo> mChunkVec;
 
     // For dispatching tasks
     Master* mDispatcher;
+    
+    DataGenerator* mData;
 
 
     std::mutex              mState_mutex;

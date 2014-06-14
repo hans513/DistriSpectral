@@ -12,6 +12,7 @@
 using namespace std;
 using namespace Eigen;
 
+
 void Logic::start() {
     
     mWait = 0;
@@ -29,9 +30,9 @@ void Logic::start() {
     
     cout << endl << "Z=" << Z;
     
+    MatrixXd W = calculateWhiten(basis, Z);
     
-    MatrixXd calculateWhiten(Z);
-    
+    cout << endl << "W=" << W;
     
     finish();
 
@@ -43,6 +44,7 @@ MatrixXd Logic::initialize(int nTarget) {
     
     int nDimension = 4;
     int nGaussian = 2;
+    mK = nGaussian;
     int nDataPerGaussian = 10;
     double noise = 1; //variance
     double unitRadius =10;
@@ -51,7 +53,7 @@ MatrixXd Logic::initialize(int nTarget) {
 
     
     //For a large data input we want to split it here;
-    data = new DataGenerator(nDimension, nGaussian, nDataPerGaussian, pow(noise,0.5), unitRadius);
+    mData = new DataGenerator(nDimension, nGaussian, nDataPerGaussian, pow(noise,0.5), unitRadius);
     int blk = data->X().cols() / nChunk;
     for (int i=0; i<nChunk-1; i++) {
         mChunkVec.push_back(ChunkInfo(i*blk, (i+1)*blk));
@@ -150,7 +152,24 @@ void Logic::computeZ_cb() {
     mState_condition.notify_one();
 }
 
-MatrixXd Logic::calculateWhiten(MatrixXd bpj) {
+MatrixXd Logic::calculateWhiten(MatrixXd bpj, MatrixXd basis) {
+
+    const JacobiSVD<MatrixXd> svd(bpj, ComputeThinU|ComputeThinV);
+    MatrixXd Ub = svd.matrixU();
+    MatrixXd U = basis * Ub;
+
+    VectorXd S = svd.singularValues();
+    unsigned long nNoise = S.rows() - mK;
+    double sigma = S.tail(nNoise).sum()/nNoise;
+    VectorXd D = S.array() - sigma;
+    // When matrix size change, we need another variable to store the result
+    VectorXd validD = D.head(mK).array().pow(-0.5);
+    MatrixXd W = U.leftCols(mK) * validD.asDiagonal();
+
+    return W;
+}
+
+Eigen::MatrixXd afterWhiten(Eigen::MatrixXd W) {
     
     
 }
@@ -161,24 +180,3 @@ void Logic::finish() {
     cout << endl << "Logic ==============> finish ";
 }
 
-void Logic::test() {
-    
-    for (int i=0; i<mChunkVec.size(); i++) {
-        cout << "start:" << mChunkVec.at(i).start()<< "  end:" << mChunkVec.at(i).end() << endl;
-    }
-    
-}
-
-void Logic::test_initial() {
-    
-    MatrixXd a(3,3);
-    a << 1,2,3,4,5,6,7,8,9;
-    
-    long size[]={3,3};
-    
-    Task task(Task::INITIAL, size);
-    
-    MPI_Send(&task, sizeof(task), MPI_CHAR, 1, 0, MPI_COMM_WORLD);
-    MPI_Send(a.data(), a.size(), MPI_DOUBLE, 1, 1, MPI_COMM_WORLD);
-    
-}
