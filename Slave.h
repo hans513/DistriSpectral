@@ -22,23 +22,23 @@
 #include "Task.h"
 #endif
 
-
 class Slave {
     
 public:
     
     static const int MASTER_ID = 0;
-    static const int DBG = 1;
+    static const int DBG = 0;
     
     Slave(int id): mId(id) {}
     
     void run();
+    
+    // Task functions
     void initialWork(Eigen::MatrixXd input, int target);
     void basisMul(Eigen::MatrixXd);
     
 private:
-    
+
     int mId;
     vector<Eigen::MatrixXd> dataVec;
-    
 };

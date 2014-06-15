@@ -15,26 +15,56 @@
 
 #endif /* defined(__DistriSpectral__Task__) */
 
-
 using namespace std;
 
+class Logic;
 
 class Callback {
-
+    
 public:
-    Callback(){};
-    
-    virtual void notify(void* data) {
-        cout<<endl<<"virtual function!!";
-    };
-    
-    void setname(char *input) {
-        strncpy(mName, input, sizeof(mName));
+    Callback (long size[2], int target, Logic* logic, void (Logic::*cb) (void)): mLogic(logic), mCb(cb) {
+        if (size!=NULL) {
+            memcpy( mSize, size, sizeof(mSize));
+            mResult = Eigen::MatrixXd::Zero(mSize[0], mSize[1]);
+        }
+        mTargetResult = target;
+        mCurrentResult = 0;
     }
-    char* name() {return mName;};
-
+    
+    void notify(void* data) {
+        
+        Eigen::MatrixXd matrix = Eigen::Map<Eigen::MatrixXd>((double*)data, mSize[0], mSize[1]);
+        
+        cout << endl <<"Callback function " << mCurrentResult  << "/"  << mTargetResult<< endl;
+        
+        mResult += matrix;
+        
+        if (++mCurrentResult == mTargetResult) {
+            //mLogic->initialize_cb();
+            (mLogic->*mCb)();
+        }
+    }
+    
+    Eigen::MatrixXd result() {return mResult;}
+    void setTargetResult(int target) {mTargetResult = target;}
+    
 private:
-    char  mName[32];
+    
+    // Pointer to main logic class
+    Logic* mLogic;
+    
+    // The dimension of the result matrix
+    long mSize[2];
+    
+    Eigen::MatrixXd mResult;
+    
+    // Number of result we are supposed to receive
+    int mTargetResult;
+    
+    // Number of result we received
+    int mCurrentResult;
+    
+    void (Logic::*mCb) (void);
 };
 
 
@@ -85,7 +115,7 @@ public:
     };
     
     TaskParcel(Task task): mTask(task){};
-    
+
     Task task() {return mTask;}
     void* data() {return mData.data();}
     int dataSize(){return mData.size();}

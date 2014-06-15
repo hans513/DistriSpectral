@@ -20,7 +20,7 @@ void Master::sender() {
     
     while (!mExit) {
         
-        cout << endl <<"Master sender ==>>: pop next task";
+        cout << endl <<"Master SENDER ==>> pop next task";
         
         // May Block here: get next task to assign
         TaskParcel current = mTaskQueue.pop();
@@ -28,59 +28,42 @@ void Master::sender() {
         
         if (task.cmd()==Task::TERMINATE) break;
         
-        
         // I should make it more general here
-        
-        
         switch (task.cmd()) {
 
             {case Task::INITIAL:
                 // May Block here: get a available slave to assign
                 int slave = mAvailSlave.pop();
                 
-                if (DBG) cout << endl <<"Master sender ==>>: send task " << current.task().cmd() << " to slave " << slave;
+                cout << endl <<"Master SENDER ==>>: send task " << current.task().cmd() << " to slave " << slave;
                 
-                // register callback function when the task return
-                cout << endl << "MASTER:: setCallback for" << slave;
-                
-                {
-                    std::unique_lock<std::mutex> lock(mCallback_mutex);
-                    mCallbackVec.at(slave) = current.callback();
-                }
-                //Callback* cb = mCallbackVec.at(slave);
-                
+                // register callback function
+                setCallback(slave, current.callback());
                 
                 MPI_Send(&task, sizeof(Task), MPI_CHAR, slave, 0, MPI_COMM_WORLD);
                 
                 if (current.data()==NULL) continue;
-                cout << endl <<"Master sender ==>>: send data to slave " << slave;
+                cout << endl <<"Master SENDER ==>> send data to slave " << slave;
                 MPI_Send(current.data(), current.dataSize(), MPI_DOUBLE, slave, 1, MPI_COMM_WORLD);
                 break;
                 
             }
                 
             {case Task::BASIS_MUL:
-                if (DBG) cout << endl << "Master sender ==>> BASIS_MUL task "<<endl;
+                cout << endl << "Master SENDER ==>> BASIS_MUL task "<<endl;
                 for (int slave_id=1; slave_id<mNumProc; slave_id++) {
-                    cout << endl << "MASTER:: setCallback for " <<slave_id;
+                    if (DBG) cout << endl << "Master SENDER ==>> setCallback for " <<slave_id;
                     MPI_Send(&task, sizeof(Task), MPI_CHAR, slave_id, 0, MPI_COMM_WORLD);
                    
-                    Callback_S1* cb = current.callback();
+                    Callback* cb = current.callback();
                     // TODO
                     //cb->setTargetResult(mNumProc);
-                    {
-                        std::unique_lock<std::mutex> lock(mCallback_mutex);
-                        mCallbackVec.at(slave_id) = current.callback();
-                    }
+                    setCallback(slave_id, current.callback());
                 }
                 
-                
-                cout << endl <<"Master sender ==>> after set callback printCallback()";
                 printCallback ();
-                
-                cout << endl << "Master sender ==>> BASIS_MUL MPI_Barrier "<<endl;
+                if (DBG) cout << endl << "Master SENDER ==>> BASIS_MUL MPI_Barrier ";
                 //MPI_Barrier(MPI_COMM_WORLD);
-                cout << endl << "Master sender ==>> BASIS_MUL pass MPI_Barrier "<<endl;
                 MPI_Bcast(current.data(), current.dataSize(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
                 break;
             }
@@ -92,7 +75,7 @@ void Master::sender() {
         }
     }
 
-    cout << endl <<"Master sender EXIT";
+    cout << endl <<"Master SENDER ==>> EXIT";
     
 }
 
@@ -103,7 +86,7 @@ void Master::receiver() {
     
     while (!mExit) {
         
-        cout << endl <<"Master receiver <<==: Receiver wait to receive next msg" << endl;
+        cout << endl <<"Master RECEIVER <<== wait to receive next msg";
         
         // May Block here
         MPI_Probe(MPI_ANY_SOURCE, Task::RETURN_TAG, MPI_COMM_WORLD, &status);
@@ -113,25 +96,21 @@ void Master::receiver() {
         vector<double> buffer(dataSize);
         MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, &status);
         
-        if (DBG) cout << endl <<"Master receiver <<==: receive from slave " << status.MPI_SOURCE << endl;
+        cout << endl <<"Master RECEIVER <<== receive from slave " << status.MPI_SOURCE;
         
         printCallback();
         
         {
             std::unique_lock<std::mutex> lock(mCallback_mutex);
-        // Callback function knows how to handle data
+            // Callback function knows how to handle data
             if (mCallbackVec.at(status.MPI_SOURCE) != NULL) {
-                cout << endl << "Master receiver <<==: Calling callback   slave:"  << status.MPI_SOURCE;
-
+                cout << endl << "Master RECEIVER <<== Calling callback slave:"  << status.MPI_SOURCE;
                 mCallbackVec.at(status.MPI_SOURCE)->notify(&buffer[0]);
                 mCallbackVec.at(status.MPI_SOURCE) = NULL;
             }
-            else cout << endl << "Master receiver <<==: No callback";
+            else cout << endl << "Master RECEIVER <<== No callback";
         }
         
-       
-        
-        cout << endl <<"Master receiver <<==: after callback printCallback()";
         printCallback ();
 
         // Put the slave back to available pool
@@ -139,7 +118,7 @@ void Master::receiver() {
 
     }
 
-    cout << endl <<"Master receiver EXIT" << endl;
+    cout << endl <<"Master RECEIVER <<== EXIT" << endl;
 }
 
 void Master::submit(TaskParcel parcel) {
@@ -149,7 +128,7 @@ void Master::submit(TaskParcel parcel) {
 
 void Master::terminate() {
     
-    cout << endl <<"Master Terminate!! ";
+    cout << endl <<"Master ===== Terminate!! =====";
     
     Task task(Task::TERMINATE);
     for (int id=1; id<mNumProc; id++) {
@@ -158,15 +137,20 @@ void Master::terminate() {
 
     mExit = 1;
 
-    // Send fake message to sender for termination
+    // Send fake message to SENDER for termination
     TaskParcel tp(task);
     mTaskQueue.push(tp);
     
-    // Send fake message to receiver for termination
+    // Send fake message to RECEIVER for termination
     MatrixXd nullMatrix(1,1);
     nullMatrix << 0;
     MPI_Send(nullMatrix.data(), nullMatrix.size(), MPI_DOUBLE, 0, Task::RETURN_TAG, MPI_COMM_WORLD);
 
+}
+
+void Master::setCallback(int slave, Callback* callback) {
+    std::unique_lock<std::mutex> lock(mCallback_mutex);
+    mCallbackVec.at(slave) = callback;
 }
 
 /*

@@ -22,14 +22,9 @@
 #include "Task.h"
 #endif
 
-
 #ifndef SpecGmm_DataGenerator_h
 #include "DataGenerator.h"
 #endif
-
-//#ifndef __DistriSpectral__BlockingQueue__
-//#include "BlockingQueue.h"
-//#endif
 
 #ifndef DistriSpectral_BlockingQueue2_h
 #include "BlockingQueue2.h"
@@ -37,11 +32,10 @@
 
 class Master {
     
-    typedef Callback Callback_S1;
-    
 public:
     
     static const int DBG = 1;
+    static const int DBG_CALLBACK = 0;
     
     Master(int numproc): mNumProc(numproc) {
         mExit = 0;
@@ -51,9 +45,7 @@ public:
         mCallbackVec = vector<Callback*>(numproc);
     }
     
-    ~Master() {
-        //if (data) delete data;
-    }
+    ~Master() { }
     
     void run();
     void receiver();
@@ -70,25 +62,17 @@ private:
     BlockingQueue<int> mAvailSlave;
     
     vector<Callback*> mCallbackVec;
-    
     std::mutex  mCallback_mutex;
+    // Manipulate mCallbackVec
+    void setCallback(int slave, Callback* callback);
     
-    void printCallback () {  
+    // For debug
+    void printCallback () {
+        if (!DBG_CALLBACK) return;
+        
         for (int i=0; i<mCallbackVec.size(); i++) {
             cout << endl << "mCallbackVec " << i << " " << mCallbackVec.at(i);
         }
     }
-    
-    // The state of slvae: 0 = free, 1 = busy
-    //vector<int> mSlaveState;
-    
-    
-    
-    //vector<ChunkInfo> mChunkVec;
-    
-    
-    // Temporary data (Should be removed in the future)
-    //MatrixXd mDataset;
-    //DataGenerator *data;
     
 };

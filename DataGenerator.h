@@ -17,34 +17,63 @@
 
 #endif
 
+typedef long IndexType;
+
+
+// A container for data characteristic settings
+class DataSettings {
+    
+public:
+    DataSettings(IndexType nDimension, IndexType nCluster
+                 , IndexType nDataPerGaussian, double noise, double unitRadius)
+    :   mDimension(nDimension),
+        mCluster(nCluster),
+        mDataPerGaussian(nDataPerGaussian),
+        mNoise(noise),
+        mUnitRadius(unitRadius){ };
+    
+    DataSettings(){};
+
+    IndexType dimension()       {return mDimension;}
+    IndexType cluster()         {return mCluster;}
+    IndexType dataPerCluster()  {return mDataPerGaussian;}
+    double noise()              {return mNoise;}
+    double unitRadius()         {return mUnitRadius;}
+    
+private:
+    IndexType mDimension;
+    IndexType mCluster;
+    IndexType mDataPerGaussian;
+    double mNoise;
+    double mUnitRadius;
+};
+
 class DataGenerator {
     
 public:
     
-    DataGenerator(unsigned long nDimension, unsigned long nGaussian, unsigned long nDataPerGaussian, double noise, double unitRadius)
-        : mDimension(nDimension),
-            mGaussian(nGaussian),
-            mDataPerGaussian(nDataPerGaussian),
-            mNoise(noise),
-            mUnitRadius(unitRadius){
+    DataGenerator(IndexType nDimension, IndexType nGaussian, IndexType nDataPerGaussian, double noise, double unitRadius) {
+                
+                mPara = DataSettings(nDimension, nGaussian
+                                         , nDataPerGaussian, noise, unitRadius);
                 initialize();
             };
+    
+    DataGenerator(DataSettings settings) {
+        mPara = settings;
+        initialize();
+    }
+    
 
     void initialize();
 
-    
     Eigen::MatrixXd X() {return mX;}
     Eigen::MatrixXd center() {return mCenters;}
     double evaluate(Eigen::MatrixXd estimate);
     
     
 private:
-    unsigned long mDimension;
-    unsigned long mGaussian;
-    unsigned long mDataPerGaussian;
-    double mNoise;
-    double mUnitRadius;
+    DataSettings mPara;
     Eigen::MatrixXd mCenters;
     Eigen::MatrixXd mX;
-    
 };

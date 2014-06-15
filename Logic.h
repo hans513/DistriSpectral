@@ -18,45 +18,57 @@
 
 #ifndef __DistriSpectral__Master__
 #include "Master.h"
-#endif /* defined(__DistriSpectral__Master__) */
+#endif 
 
 #ifndef __DistriSpectral__Task__
 #include "Task.h"
 #endif
 
+#ifndef __SpecGmm__D3Matrix__
+#include "D3Matrix.h"
+#endif
+
+#ifndef __SpecGmm__TesnsorPower__
+#include "TensorPower.h"
+#endif
+
+typedef long IndexType;
 
 class Logic {
-    
-    //friend class Callback_S1;
     
 public:
     
     static const int DBG = 1;
     
-    Logic(Master& master): mDispatcher(&master) {
-    }
+    // State for mWait
+    static const int STATE_ACTIVE = 0;
+    static const int STATE_WAIT = 1;
     
-    ~Logic() {
-        if (data) delete data;
-    }
+    Logic(Master& master): mDispatcher(&master) {}
+    ~Logic() { }
     
-    void start();
+    void start(MatrixXd X, int K, double noise);
     void initialize_cb();
     void computeZ_cb();
-    void finish();
-    
-    Eigen::MatrixXd check;
+
+    // Return Estimate centers after computation
+    Eigen::MatrixXd centers() {return mCenters;};
+
 
 private:
-    
-    int mK;
 
-    Eigen::MatrixXd initialize(int nTarget);
+    Eigen::MatrixXd initialize(MatrixXd X, int nTarget);
     Eigen::MatrixXd calculateBasis(Eigen::MatrixXd rpj, int nTarget);
     Eigen::MatrixXd computeZ(Eigen::MatrixXd basis);
-    Eigen::MatrixXd calculateWhiten(Eigen::MatrixXd bpj, Eigen::MatrixXd basis);
+    Eigen::MatrixXd calculateWhiten(Eigen::MatrixXd bpj, Eigen::MatrixXd basis
+                                    , int K, IndexType nData) ;
     
-    Eigen::MatrixXd afterWhiten(Eigen::MatrixXd);
+
+    void finish();
+    
+
+    // hold lock and change mWait
+    void changeWaitState(int state);
     
     // The info of the split matrices
     vector<ChunkInfo> mChunkVec;
@@ -64,62 +76,15 @@ private:
     // For dispatching tasks
     Master* mDispatcher;
     
-    DataGenerator* mData;
-
-
     std::mutex              mState_mutex;
     std::condition_variable mState_condition;
     int mWait;
 
+    Eigen::MatrixXd mCenters;
+
     // Temporary data (Should be removed in the future)
-    DataGenerator *data;
-  
-};
-
-class Callback_S1 : public Callback {
-
-public:
-    Callback_S1(long size[2], int target, Logic* logic, void (Logic::*cb) (void)): mLogic(logic), mCb(cb) {
-        if (size!=NULL) {
-            memcpy( mSize, size, sizeof(mSize));
-            mResult = Eigen::MatrixXd::Zero(mSize[0], mSize[1]);
-        }
-        mTargetResult = target;
-        mCurrentResult = 0;
-    }
-    
-    void notify(void* data) {
-
-        Eigen::MatrixXd matrix = Eigen::Map<Eigen::MatrixXd>((double*)data, mSize[0], mSize[1]);
-        
-        cout << endl <<"Notify!!!!  " << mCurrentResult  << "  "  << mTargetResult<< endl;
-        
-        mResult += matrix;
-        
-        if (++mCurrentResult == mTargetResult) {
-            //mLogic->initialize_cb();
-            (mLogic->*mCb)();
-        }
-    }
-    
-    Eigen::MatrixXd result() {return mResult;}
-    void setTargetResult(int target) {mTargetResult = target;}
-    
-private:
-    
-    // Pointer to main logic class
-    Logic* mLogic;
-    
-    // The dimension of the result matrix
-    long mSize[2];
-    
-    Eigen::MatrixXd mResult;
-    
-    // Number of result we are supposed to receive
-    int mTargetResult;
-    
-    // Number of result we received
-    int mCurrentResult;
-    
-    void (Logic::*mCb) (void);
+    //DataGenerator* mData;
+    template <typename Derived>
+    void tensorDecompose(D3Matrix<Derived> T, MatrixXd W);
+    void afterWhiten(Eigen::MatrixXd X, Eigen::MatrixXd W, int K, double sigma);
 };

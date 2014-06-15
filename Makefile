@@ -10,5 +10,5 @@ endif
 
 
 main: main.cpp Master.cpp Slave.cpp DataGenerator.cpp Task.cpp Logic.cpp
-	mpicxx -I $(EIGEN) -std=c++11 -o eigenMpi main.cpp Master.cpp Slave.cpp DataGenerator.cpp Task.cpp Logic.cpp 
+	mpicxx -I $(EIGEN) -I $(EIGEN)/unsupported -std=c++11 -o eigenMpi main.cpp Master.cpp Slave.cpp DataGenerator.cpp Task.cpp Logic.cpp 
 
