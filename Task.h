@@ -43,6 +43,8 @@ public:
             //mLogic->initialize_cb();
             (mLogic->*mCb)();
         }
+        
+        cout << endl <<"Finish Callback";
     }
     
     Eigen::MatrixXd result() {return mResult;}

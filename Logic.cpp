@@ -82,8 +82,10 @@ MatrixXd Logic::initialize(MatrixXd X, int nTarget) {
     }
     
     cout << endl << "[LOGIC] : STATE_1  START TO WAIT";
-    std::unique_lock<std::mutex> lock(mState_mutex);
-    mState_condition.wait(lock);
+    {
+        std::unique_lock<std::mutex> lock(mState_mutex);
+        mState_condition.wait(lock);
+    }
     cout << endl << "[LOGIC] : STATE_1  FINISH WAITING";
 
     MatrixXd result = callback->result();
@@ -104,7 +106,7 @@ MatrixXd Logic::calculateBasis(MatrixXd rpj, int nBasis) {
     //const JacobiSVD<MatrixXd> svd(rpj, ComputeThinU | ComputeThinV);
     //MatrixXd Ub = svd.matrixU();
     
-    cout << endl << "[LOGIC] : STATE_4 CALCULATE BASIS";
+    cout << endl << "[LOGIC] : STATE_2 CALCULATE BASIS";
     
     HouseholderQR<MatrixXd> qr(rpj);
     MatrixXd Q = MatrixXd::Identity(rpj.rows(), nBasis);
@@ -119,7 +121,7 @@ MatrixXd Logic::computeZ(MatrixXd basis) {
     IndexType retSize[2] = {basis.cols(), basis.cols()};
     
     // TODO 2=nprocess
-    Callback* callback = new Callback(retSize, 2, this, &Logic::computeZ_cb);
+    Callback* callback = new Callback(retSize, 1, this, &Logic::computeZ_cb);
     changeWaitState(STATE_WAIT);
     
     IndexType  size[2] = {basis.cols(), basis.cols()};
@@ -128,8 +130,10 @@ MatrixXd Logic::computeZ(MatrixXd basis) {
     mDispatcher->submit(tp);
 
     cout << endl << "[LOGIC] : STATE_3  START TO WAIT";
-    std::unique_lock<std::mutex> lock(mState_mutex);
-    mState_condition.wait(lock);
+    {
+        std::unique_lock<std::mutex> lock(mState_mutex);
+        mState_condition.wait(lock);
+    }
     cout << endl << "[LOGIC] : STATE_3  FINISH WAITING";
     
     MatrixXd result = callback->result();

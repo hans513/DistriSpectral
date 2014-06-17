@@ -22,7 +22,8 @@ void Slave::run() {
     while (!exit) {
 
         cout << endl << "Remote >> mId:" << mId << " Wait for next task";
-
+        cout << endl;
+        
         // Receive remote task here
         MPI_Recv(taskBuf, sizeof(Task), MPI_CHAR, MASTER_ID, 0, MPI_COMM_WORLD, &status);
         Task* task = (Task*) taskBuf;
@@ -47,7 +48,8 @@ void Slave::run() {
                 MPI_Get_count(&status, MPI_DOUBLE, &dataSize);
                 
                 vector<double> buffer(dataSize);
-                MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, MASTER_ID, 1, MPI_COMM_WORLD, &status);
+                MPI_Request request;
+                MPI_Irecv(&buffer[0], dataSize, MPI_DOUBLE, MASTER_ID, 1, MPI_COMM_WORLD, &request);
                 
                 cout << endl << "Remote >> mId:" << mId << " data received";
                 

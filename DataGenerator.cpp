@@ -97,10 +97,10 @@ double DataGenerator::evaluate(MatrixXd estimate) {
         bestMatch.col(i) = finalEstimate.col(minRow);
     }
     
-    cout << endl <<" ===== Best match ===== " << endl;
-    cout << bestMatch << endl;
-    cout << " ===== Original ===== " << endl;
-    cout << mCenters << endl;
+    //cout << endl <<" ===== Best match ===== " << endl;
+    //cout << bestMatch << endl;
+    //cout << " ===== Original ===== " << endl;
+    //cout << mCenters << endl;
     cout << endl << "Avg RMSE=" << error/  mPara.cluster() << endl;
     
     return (error/  mPara.cluster());

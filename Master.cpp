@@ -20,10 +20,11 @@ void Master::sender() {
     
     while (!mExit) {
         
-        cout << endl <<"Master SENDER ==>> pop next task";
+        cout << endl <<"Master SENDER ==>> pop next task" << endl;
         
         // May Block here: get next task to assign
         TaskParcel current = mTaskQueue.pop();
+        cout << endl << "Master SENDER ==>> After pop task";
         Task task = current.task();
         
         if (task.cmd()==Task::TERMINATE) break;
@@ -33,7 +34,9 @@ void Master::sender() {
 
             {case Task::INITIAL:
                 // May Block here: get a available slave to assign
+                cout << endl <<"Master SENDER ==>> before pop slave" << endl;
                 int slave = mAvailSlave.pop();
+                cout << endl <<"Master SENDER ==>> after pop slave";
                 
                 cout << endl <<"Master SENDER ==>> send task " << current.task().cmd() << " to slave " << slave;
                 
@@ -43,11 +46,13 @@ void Master::sender() {
                 MPI_Send(&task, sizeof(Task), MPI_CHAR, slave, 0, MPI_COMM_WORLD);
                 
                 if (current.data()==NULL) {
-                    cout << endl <<"Master SENDER ==>> !!!!!!No data to be sent ???? " << slave;
+                    cout << endl <<"Master SENDER ==>> !!!!!!No data to be sent ???? " << slave << endl;
                     continue;
                 }
-                cout << endl <<"Master SENDER ==>> send data to slave " << slave;
-                MPI_Send(current.data(), current.dataSize(), MPI_DOUBLE, slave, 1, MPI_COMM_WORLD);
+                cout << endl <<"Master SENDER ==>> send data to slave " << slave << endl;
+                      MPI_Request request;
+                MPI_Isend(current.data(), current.dataSize(), MPI_DOUBLE, slave, 1, MPI_COMM_WORLD, &request);
+                cout << endl <<"Master SENDER ==>> finish sending data to slave " << slave << endl;
                 break;
                 
             }
@@ -90,7 +95,7 @@ void Master::receiver() {
     
     while (!mExit) {
         
-        cout << endl <<"Master RECEIVER <<== wait to receive next msg";
+        cout << endl <<"Master RECEIVER <<== wait to receive next msg" << endl;
         
         // May Block here
         MPI_Probe(MPI_ANY_SOURCE, Task::RETURN_TAG, MPI_COMM_WORLD, &status);
@@ -118,7 +123,9 @@ void Master::receiver() {
         printCallback ();
 
         // Put the slave back to available pool
+        cout << endl << "Master RECEIVER <<== Before push slave back";
         mAvailSlave.push(status.MPI_SOURCE);
+        cout << endl << "Master RECEIVER <<== After push slave back";
 
     }
 
