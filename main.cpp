@@ -52,7 +52,29 @@ int main( int argc, char *argv[] ) {
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     
     if(myid==0) {
-    
+        
+        // Default settings
+        int nDimension = 10;
+        int nCluster = 5;
+        int nDataPerCluster = 1000;
+        double noise = 1; //variance
+        double unitRadius =10;
+        
+        string strDefault;
+        cout << endl << "Use default settings? [y/n] (default y):";
+        getline(cin, strDefault);
+        
+        // User want to input new Settings
+        if (!strDefault.compare("n")) {
+            cout << endl << "Dimension:";
+            cin >> nDimension;
+            cout << endl << "Number of clusters:";
+            cin >> nCluster;
+            cout << endl << "Number of data per cluster:";
+            cin >> nDataPerCluster;
+        }
+        
+        
         // It's master node
         Master master(numprocs);
 
@@ -62,26 +84,37 @@ int main( int argc, char *argv[] ) {
         // The thread thst receives result from slave
         std::thread receiver(&Master::receiver, &master);
         
-        int nDimension = 50;
-        int nCluster = 10;
-        int nDataPerCluster = 1000;
-        double noise = 1; //variance
-        double unitRadius =10;
-        
         DataSettings para(nDimension, nCluster, nDataPerCluster, pow(noise,0.5), unitRadius);
-        DataGenerator data(para);
         
-        // Main Algorithm
-        Logic logic(master);
-        logic.start(data.X(), nCluster, noise);
+        int nRepeat = 2;
         
+        
+        
+        for (int repInd =0; repInd<nRepeat; repInd++) {
+        
+            master.reset();
+            
+            DataGenerator data(para);
+        
+            // Main Algorithm
+            Logic logic(master);
+            
+            int64 t0 = GetTimeMs64();
+            logic.start(data.X(), nCluster, noise);
+            int64 t1 = GetTimeMs64();
+            
+            cout << endl << "!!!!!!!!!!@@@@@@@TIME:" << t1-t0 << endl;
+            
+            if(DBG) cout << endl << "RESULT " << endl << logic.centers();
+            data.evaluate(logic.centers());
+            
+        }
+
+        //logic.finish();
+        
+        master.terminate();
         sender.join();
         receiver.join();
-        
-        cout << endl << "RESULT " << endl << logic.centers();
-        
-        data.evaluate(logic.centers());
-
     }
     else {
         // It's slave node

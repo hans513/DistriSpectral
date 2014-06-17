@@ -35,7 +35,7 @@ class Master {
 public:
     
     static const int DBG = 1;
-    static const int DBG_CALLBACK = 0;
+    static const int DBG_CALLBACK = 1;
     
     Master(int numproc): mNumProc(numproc) {
         mExit = 0;
@@ -52,6 +52,8 @@ public:
     void sender();
     void terminate();
     void submit(TaskParcel parcel);
+    
+    void reset();
     
 private:
 

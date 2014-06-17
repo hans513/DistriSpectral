@@ -35,14 +35,17 @@ void Master::sender() {
                 // May Block here: get a available slave to assign
                 int slave = mAvailSlave.pop();
                 
-                cout << endl <<"Master SENDER ==>>: send task " << current.task().cmd() << " to slave " << slave;
+                cout << endl <<"Master SENDER ==>> send task " << current.task().cmd() << " to slave " << slave;
                 
                 // register callback function
                 setCallback(slave, current.callback());
                 
                 MPI_Send(&task, sizeof(Task), MPI_CHAR, slave, 0, MPI_COMM_WORLD);
                 
-                if (current.data()==NULL) continue;
+                if (current.data()==NULL) {
+                    cout << endl <<"Master SENDER ==>> !!!!!!No data to be sent ???? " << slave;
+                    continue;
+                }
                 cout << endl <<"Master SENDER ==>> send data to slave " << slave;
                 MPI_Send(current.data(), current.dataSize(), MPI_DOUBLE, slave, 1, MPI_COMM_WORLD);
                 break;
@@ -52,13 +55,14 @@ void Master::sender() {
             {case Task::BASIS_MUL:
                 cout << endl << "Master SENDER ==>> BASIS_MUL task "<<endl;
                 for (int slave_id=1; slave_id<mNumProc; slave_id++) {
-                    if (DBG) cout << endl << "Master SENDER ==>> setCallback for " <<slave_id;
+                    int slave = mAvailSlave.pop();
+                    
                     MPI_Send(&task, sizeof(Task), MPI_CHAR, slave_id, 0, MPI_COMM_WORLD);
-                   
+                    if (DBG) cout << endl << "Master SENDER ==>> setCallback for " <<slave;
                     Callback* cb = current.callback();
                     // TODO
                     //cb->setTargetResult(mNumProc);
-                    setCallback(slave_id, current.callback());
+                    setCallback(slave, current.callback());
                 }
                 
                 printCallback ();
@@ -151,6 +155,13 @@ void Master::terminate() {
 void Master::setCallback(int slave, Callback* callback) {
     std::unique_lock<std::mutex> lock(mCallback_mutex);
     mCallbackVec.at(slave) = callback;
+}
+
+void Master::reset() {
+    Task task(Task::RESET);
+    for (int id=1; id<mNumProc; id++) {
+        MPI_Send(&task, sizeof(task), MPI_CHAR, id, 0, MPI_COMM_WORLD);
+    }
 }
 
 /*

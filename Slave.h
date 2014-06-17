@@ -40,5 +40,8 @@ public:
 private:
 
     int mId;
+    void resetDataCache() {
+        dataVec.clear();
+    }
     vector<Eigen::MatrixXd> dataVec;
 };

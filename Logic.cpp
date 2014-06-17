@@ -3,7 +3,7 @@
 //  DistriSpectral
 //
 //  Created by Huang, Tse-Han on 2014/6/9.
-//  Copyright (c) 2014年 Tse-Han Huang. All rights reserved.
+//  Copyright (c) 2014 Tse-Han Huang. All rights reserved.
 //
 
 #include "Logic.h"
@@ -16,8 +16,8 @@ using namespace Eigen;
 void Logic::start(MatrixXd X, int K, double noise) {
     
     cout << endl << endl << "[LOGIC] : START";
-    
     changeWaitState(STATE_ACTIVE);
+    int64 t0 = GetTimeMs64();
     
     int nDimension = X.rows();
     
@@ -26,20 +26,33 @@ void Logic::start(MatrixXd X, int K, double noise) {
     if (p<nDimension) p = nDimension;
     
     MatrixXd rpj = initialize(X, p);
-    MatrixXd basis = calculateBasis(rpj, p);
+    int64 t1 = GetTimeMs64();
     
-    cout << endl << endl << "[LOGIC] : BASIS="  << basis << endl << endl;
+    MatrixXd basis = calculateBasis(rpj, p);
+    int64 t2 = GetTimeMs64();
+    if(PRINT_MATRIX) cout << endl << endl << "[LOGIC] : BASIS="  << basis << endl << endl;
     
     MatrixXd Z = computeZ(basis);
-    
-    cout << endl << endl << "[LOGIC] : Z=" << endl <<Z << endl << endl;
+    int64 t3 = GetTimeMs64();
+    if(PRINT_MATRIX) cout << endl << endl << "[LOGIC] : Z=" << endl <<Z << endl << endl;
     
     MatrixXd W = calculateWhiten(Z, basis, K, X.cols());
-    
-    cout << endl << endl << "[LOGIC] : W=" << endl << W << endl;
+    int64 t4 = GetTimeMs64();
+    if(PRINT_MATRIX) cout << endl << endl << "[LOGIC] : W=" << endl << W << endl;
     
     afterWhiten( X, W, K, noise);
-    finish();
+    int64 t5 = GetTimeMs64();
+    
+    if (TIME_MEASURE) {
+        cout << endl <<  endl <<"******************** TIME MEASUREMENT *******************";
+        cout << endl <<  "* Time: S1 Random Projection (Distributed)\t  " << (t1-t0) <<"\t*";
+        cout << endl <<  "* Time: S2 Calculate Basis (Only master)\t  " << (t2-t1) <<"\t*";
+        cout << endl <<  "* Time: S3 Basis Multiplication (Distributed)\t  " << (t3-t2) <<"\t*";
+        cout << endl <<  "* Time: S4 Calculate Whiten Matrix (Only master)  " << (t4-t3) <<"\t*";
+        cout << endl <<  "* Time: S5 Tensor Decomposition (Only master)\t  " << (t5-t4) <<"\t*";
+        cout << endl <<  "* Time: TOTAL time consumption\t\t\t  " << (t5-t0) << "\t*";
+        cout << endl <<"*********************************************************" << endl;
+    }
 }
 
 
@@ -153,6 +166,8 @@ MatrixXd Logic::calculateWhiten(MatrixXd bpj, MatrixXd basis, int K, IndexType  
 
 void Logic::afterWhiten(MatrixXd X, MatrixXd W, int  K, double sigma) {
     
+    cout << endl << "[LOGIC] : STATE_5 AFTER WHITEN";
+    
     IndexType  nData = X.cols();
     IndexType  nDimension = X.rows();
     
@@ -241,18 +256,21 @@ void Logic::tensorDecompose(D3Matrix<Derived> T, MatrixXd W) {
     
     // Print out the result
     MatrixXd centerMatrix(W.rows(), lambda.size());
-    cout << endl <<"TensorDecompose result =" << endl;
-    cout << "lambda =" << endl << "\t";
     
     vector<double> mWeight;
     
     mWeight.clear();
     for (int i=0; i<centers.size(); i++) {
         centerMatrix.col(i) = centers.at(i).col(0);
-        cout << pow(lambda.at(i),-2) <<"\t";
+        //cout << pow(lambda.at(i),-2) <<"\t";
         mWeight.push_back(pow(lambda.at(i),-2));
     }
-    cout << endl <<"centers ="<<endl<< centerMatrix << endl;
+
+    if (PRINT_MATRIX) {
+        cout << endl <<"TensorDecompose result =" << endl;
+        cout << "lambda =" << endl << "\t";
+        cout << endl <<"centers ="<<endl<< centerMatrix << endl;
+    }
     
     //mData->evaluate(centerMatrix);
     //cout << endl <<"REAL centers ="<<endl<< mData->center();

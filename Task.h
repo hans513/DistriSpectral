@@ -35,7 +35,7 @@ public:
         
         Eigen::MatrixXd matrix = Eigen::Map<Eigen::MatrixXd>((double*)data, mSize[0], mSize[1]);
         
-        cout << endl <<"Callback function " << mCurrentResult  << "/"  << mTargetResult<< endl;
+        cout << endl <<"Callback function " << mCurrentResult+1  << "/"  << mTargetResult<< endl;
         
         mResult += matrix;
         
@@ -77,7 +77,7 @@ public:
     static const int TERMINATE = -1;
     static const int INITIAL = 1;
     static const int BASIS_MUL = 2;
-    static const int MULTIPLY = 10;
+    static const int RESET = 10;
     static const int TEST = 99;
     
     static const int RETURN_TAG = 9;

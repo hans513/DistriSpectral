@@ -49,7 +49,7 @@ void Slave::run() {
                 vector<double> buffer(dataSize);
                 MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, MASTER_ID, 1, MPI_COMM_WORLD, &status);
                 
-                if (DBG) cout << endl << "Remote >> mId:" << mId << " data received";
+                cout << endl << "Remote >> mId:" << mId << " data received";
                 
                 MatrixXd matrix = Map<MatrixXd>(&buffer[0], task->size()[0], task->size()[1]);
                 initialWork(matrix, task->info());
@@ -69,7 +69,8 @@ void Slave::run() {
                 break;
             }
             
-            {case Task::TEST:
+            {case Task::RESET:
+                resetDataCache();
                 break;
             }
                 

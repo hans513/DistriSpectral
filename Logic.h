@@ -32,13 +32,19 @@
 #include "TensorPower.h"
 #endif
 
+#ifndef DistriSpectral_Misc_h
+#include "Misc.h"
+#endif
+
 typedef long IndexType;
 
 class Logic {
     
 public:
     
-    static const int DBG = 1;
+    static const bool DBG = true;
+    static const bool PRINT_MATRIX = false;
+    static const bool TIME_MEASURE = true;
     
     // State for mWait
     static const int STATE_ACTIVE = 0;
@@ -55,6 +61,8 @@ public:
     Eigen::MatrixXd centers() {return mCenters;};
 
 
+    void finish();
+    
 private:
 
     Eigen::MatrixXd initialize(MatrixXd X, int nTarget);
@@ -64,7 +72,6 @@ private:
                                     , int K, IndexType nData) ;
     
 
-    void finish();
     
 
     // hold lock and change mWait
