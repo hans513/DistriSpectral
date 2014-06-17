@@ -86,14 +86,13 @@ int main( int argc, char *argv[] ) {
         
         DataSettings para(nDimension, nCluster, nDataPerCluster, pow(noise,0.5), unitRadius);
         
-        int nRepeat = 2;
+        int nRepeat = 10;
         
-        
+        vector<int64> timeHistory;
         
         for (int repInd =0; repInd<nRepeat; repInd++) {
         
             master.reset();
-            
             DataGenerator data(para);
         
             // Main Algorithm
@@ -103,18 +102,26 @@ int main( int argc, char *argv[] ) {
             logic.start(data.X(), nCluster, noise);
             int64 t1 = GetTimeMs64();
             
-            cout << endl << "!!!!!!!!!!@@@@@@@TIME:" << t1-t0 << endl;
+            cout << "[MAIN] : Total time=" << (t1-t0) << endl;
+            timeHistory.push_back(t1-t0);
             
             if(DBG) cout << endl << "RESULT " << endl << logic.centers();
             data.evaluate(logic.centers());
             
         }
-
-        //logic.finish();
-        
+      
         master.terminate();
         sender.join();
         receiver.join();
+
+        float average=0;
+        for (int i=0; i<timeHistory.size(); i++) {
+            cout << endl << "Trail " << i << "\tTime:\t" << timeHistory.at(i);
+            average += timeHistory.at(i);
+        }
+        
+        cout << endl << "Average :\t" << average/timeHistory.size();
+    
     }
     else {
         // It's slave node
