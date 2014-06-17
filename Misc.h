@@ -16,6 +16,9 @@
 #include <ctime>
 #endif
 
+
+#include <Eigen/KroneckerProduct>
+
 #endif
 
 typedef long long int64;
@@ -51,4 +54,47 @@ static int64 GetTimeMs64() {
     
     return ret;
 #endif
+}
+
+template <typename Derived>
+static D3Matrix<Derived> outer(const MatrixBase<Derived> &A, MatrixBase<Derived> &B) {
+    
+    MatrixXd m = kroneckerProduct(A,B).eval();
+    
+    //cout << "M row:" << m.rows() <<"  m.cols() " <<m.cols() << endl;
+    
+    unsigned long size[3];
+    unsigned long index = 0;
+    
+    if (A.rows()>1) size[index++] = A.rows();
+    if (A.cols()>1) size[index++] = A.cols();
+    if (B.rows()>1) size[index++] = B.rows();
+    if (B.cols()>1) size[index++] = B.cols();
+    
+    if (index>3) cout << "outer: size is larger than 3!!" << endl;
+    else if (index<3) {
+        //cout << "outer: size is smaller than 3!!" << endl;
+        size[2] = 1;
+    }
+    
+    D3Matrix<MatrixXd> ret(size[0], size[1], size[2]);
+    
+    long layerSize = size[0] * size[1];
+    long colNeed = layerSize/m.rows();
+    
+    MatrixXd layer0 = m.leftCols(colNeed);
+    layer0.resize(size[0],size[1]);
+    ret.setLayer(0, layer0);
+    
+    if (index < 3)  return ret;
+    
+    int i=1;
+    for (unsigned long colInd=colNeed; colInd<m.cols(); colInd+=colNeed) {
+        MatrixXd temp  = m.middleCols(colInd, colNeed);
+        temp.resize(size[0],size[1]);
+        ret.setLayer(i++, temp);
+    }
+    
+    return ret;
+    
 }

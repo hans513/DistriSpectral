@@ -18,10 +18,9 @@
 #include "D3Matrix.h"
 #endif /* defined(__SpecGmm__D3Matrix__) */
 
-/*
-#ifndef __SpecGmm__Test__
-#include "test.h"
-#endif *//* defined(__SpecGmm__Test__) */
+#ifndef DistriSpectral_Misc_h
+#include "Misc.h"
+#endif
 
 using namespace Eigen;
 
@@ -114,7 +113,7 @@ public:
         cout << "test error = " << endl << solution-result << endl ;
     }
     
-   
+    
     void compute (D3Matrix<Derived> &T, int L, int N) {
         
         /*vvvvvvvv
@@ -169,26 +168,26 @@ public:
             
             //cout << "====theta03" << temp << endl;
             //cout << "====theta03" << theta.getLayer(0).col(tau) << endl;
-
+            
             
             for (int t=1; t<N+1; t++) {
                 MatrixXd preTheta = theta.getLayer(t-1).col(tau);
                 MatrixXd eye = MatrixXd::Identity(k,k);
                 MatrixXd tensorTheta = tFunction(T, eye, preTheta, preTheta);
                 
-               // cout << "====tensor Theta" << tensorTheta;
+                // cout << "====tensor Theta" << tensorTheta;
                 MatrixXd temp = theta.getLayer(t);
                 temp.col(tau) = tensorTheta / tensorTheta.norm();
                 theta.setLayer(t, temp);
                 
-//                theta.getLayer(t).col(tau) = tensorTheta / tensorTheta.norm();
-               // cout << "====colAA" << tensorTheta / tensorTheta.norm();
-               // cout << "====col" << theta.getLayer(t).col(tau) <<endl;
-
+                //                theta.getLayer(t).col(tau) = tensorTheta / tensorTheta.norm();
+                // cout << "====colAA" << tensorTheta / tensorTheta.norm();
+                // cout << "====col" << theta.getLayer(t).col(tau) <<endl;
+                
             }
             
         }
-
+        
         /*
          
          for tau=1:L
@@ -217,7 +216,7 @@ public:
         for (int tau=0; tau<L; tau++) {
             MatrixXd cur = theta.getLayer(N).col(tau);
             
-          //  cout << "cur=" << theta.getLayer(N) << endl;
+            //  cout << "cur=" << theta.getLayer(N) << endl;
             MatrixXd lambda = tFunction(T, cur, cur, cur);
             //cout << "tau=" << tau << "  "<< lambda<< endl;
             
@@ -251,23 +250,27 @@ public:
         bestTheta = best;
         bestLambda = lambda(0,0);
         
-        MatrixXd temp = outer(bestTheta, bestTheta)->getLayer(0);
-        D3Matrix<MatrixXd> tt = T - *outer(temp, bestTheta)*bestLambda;
-        deflateT = &tt;
-        //*deflateT = T - (*outer(temp, bestTheta)*bestLambda);
-      
-
-    }
-
-    TensorPower (D3Matrix<Derived> &T, int L, int N) {
+        MatrixXd temp = outer(bestTheta, bestTheta).getLayer(0);
         
-        //deflateT = new D3Matrix<MatrixXd>(T.rows(),T.cols(),T.layers());
+        D3Matrix<MatrixXd> ttemp = outer(temp, bestTheta);
+        
+        D3Matrix<MatrixXd> tt = T - ttemp*bestLambda;
+        deflateT = tt;
+        //*deflateT = T - (*outer(temp, bestTheta)*bestLambda);
+        
+        
+    }
+    
+    TensorPower (D3Matrix<Derived> &T, int L, int N):deflateT(T.rows(),T.cols(),T.layers())
+    {
+        
+        
         compute (T, L, N);
     }
     
     ~TensorPower() {
         
-       // if(deflateT) delete deflateT;
+        // if(deflateT) delete deflateT;
     }
     
     MatrixXd theta() {
@@ -278,14 +281,14 @@ public:
         return bestLambda;
     }
     
-    D3Matrix<MatrixXd>* deflate() {
+    D3Matrix<MatrixXd> deflate() {
         return deflateT;
     }
-
+    
 private:
     MatrixXd bestTheta;
     double bestLambda;
-    D3Matrix<MatrixXd>* deflateT;
+    D3Matrix<MatrixXd> deflateT;
 };
 
 
