@@ -66,7 +66,7 @@ void Master::sender() {
                     if (DBG) cout << endl << "Master SENDER ==>> setCallback for " <<slave;
                     Callback* cb = current.callback();
                     // TODO
-                    //cb->setTargetResult(mNumProc);
+                    cb->setTargetResult(mNumProc-1);
                     setCallback(slave, current.callback());
                 }
                 
