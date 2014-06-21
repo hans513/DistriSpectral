@@ -49,6 +49,8 @@ void Slave::run() {
                 
                 vector<double> buffer(dataSize);
                 MPI_Request request;
+                
+                cout << endl << "Remote >> mId:" << mId << " waiting for data "<< "  [" <<task->id()<<"]" << endl;
                 MPI_Irecv(&buffer[0], dataSize, MPI_DOUBLE, MASTER_ID, 1, MPI_COMM_WORLD, &request);
                 
                 cout << endl << "Remote >> mId:" << mId << " data received"<< "  [" <<task->id()<<"]";
