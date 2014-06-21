@@ -54,11 +54,14 @@ void Slave::run() {
                 int dataSize;
                 MPI_Probe(MASTER_ID, 1, MPI_COMM_WORLD, &status);
                 
-                cout << endl << "Remote >> mId:" << mId << " Task::INITIAL 1"<< "  [" <<task->id()<<"]" << endl;
+                cout << endl << "Remote >> mId:" << mId << " Task::INITIAL Probe"<< "  [" <<task->id()<<"]" << endl;
                 
                 MPI_Get_count(&status, MPI_DOUBLE, &dataSize);
                 
+                cout << endl << "Remote >> mId:" << mId << " Task::INITIAL GetCount:"<<dataSize << " going to allocate vector  [" <<task->id()<<"]" << endl;
+                
                 vector<double> buffer(dataSize);
+                cout << endl << "Remote >> mId:" << mId << " Task::INITIAL After bufer vector allocation dataSize "<<dataSize << "  [" <<task->id()<<"]" << endl;
                 MPI_Request request;
                 
                 cout << endl << "Remote >> mId:" << mId << " waiting for data "<< "  [" <<task->id()<<"]" << endl;
