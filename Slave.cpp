@@ -12,6 +12,14 @@ using namespace std;
 using namespace Eigen;
 
 void Slave::run() {
+    
+    char name[MAXHOSTNAMELEN];
+    size_t namelen = MAXHOSTNAMELEN;
+    
+    if (gethostname(name, namelen) != -1) {
+        cout << endl << "Remote >> mId:" << mId << " Map to machine:" << name;
+    }
+    
 
     // Buffer for receiving the remote task
     char taskBuf[sizeof(Task)];
@@ -42,9 +50,12 @@ void Slave::run() {
              
             // Receive the data matrix chunk
             {case Task::INITIAL:
-                cout << endl << "Remote >> mId:" << mId << " Task::INITIAL" <<endl<< "  [" <<task->id()<<"]";
+                cout << endl << "Remote >> mId:" << mId << " Task::INITIAL"<< "  [" <<task->id()<<"]" << endl;
                 int dataSize;
                 MPI_Probe(MASTER_ID, 1, MPI_COMM_WORLD, &status);
+                
+                cout << endl << "Remote >> mId:" << mId << " Task::INITIAL 1"<< "  [" <<task->id()<<"]" << endl;
+                
                 MPI_Get_count(&status, MPI_DOUBLE, &dataSize);
                 
                 vector<double> buffer(dataSize);

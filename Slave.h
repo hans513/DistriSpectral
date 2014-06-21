@@ -10,10 +10,14 @@
 #define __DistriSpectral__Slave__
 
 #include <iostream>
-#include <Eigen/Dense>
-#include <stdlib.h>
 #include <vector>
 #include <random>
+#include <stdlib.h>
+#include <sys/param.h>
+#include <unistd.h>
+
+#include <Eigen/Dense>
+
 #include "mpi.h"
 
 #endif /* defined(__DistriSpectral__Slave__) */
