@@ -38,7 +38,7 @@ void Master::sender() {
                 int slave = mAvailSlave.pop();
                 cout << endl <<"Master SENDER ==>> after pop slave";
                 
-                cout << endl <<"Master SENDER ==>> send task " << current.task().cmd() << " to slave " << slave;
+                cout << endl <<"Master SENDER ==>> send task " << current.task().cmd() << " to slave " << slave << "  [" <<task.id()<<"]";
                 
                 // register callback function
                 setCallback(slave, current.callback());
@@ -49,7 +49,7 @@ void Master::sender() {
                     cout << endl <<"Master SENDER ==>> !!!!!!No data to be sent ???? " << slave << endl;
                     continue;
                 }
-                cout << endl <<"Master SENDER ==>> send data to slave " << slave << endl;
+                cout << endl <<"Master SENDER ==>> send data to slave " << slave << "  [" <<task.id()<<"]"<< endl;
                       MPI_Request request;
                 MPI_Isend(current.data(), current.dataSize(), MPI_DOUBLE, slave, 1, MPI_COMM_WORLD, &request);
                 cout << endl <<"Master SENDER ==>> finish sending data to slave " << slave << endl;
@@ -58,7 +58,7 @@ void Master::sender() {
             }
                 
             {case Task::BASIS_MUL:
-                cout << endl << "Master SENDER ==>> BASIS_MUL task "<<endl;
+                cout << endl << "Master SENDER ==>> BASIS_MUL task "<< "  [" <<task.id()<<"]"<<endl;
                 for (int slave_id=1; slave_id<mNumProc; slave_id++) {
                     int slave = mAvailSlave.pop();
                     

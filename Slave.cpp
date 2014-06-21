@@ -28,7 +28,7 @@ void Slave::run() {
         MPI_Recv(taskBuf, sizeof(Task), MPI_CHAR, MASTER_ID, 0, MPI_COMM_WORLD, &status);
         Task* task = (Task*) taskBuf;
         
-        cout << endl << "Remote >> mId:" << mId << " Got task:" <<task->cmd();
+        cout << endl << "Remote >> mId:" << mId << " Got task:" <<task->cmd()<< "  [" <<task->id()<<"]";
 
         
         // Decide what task to do
@@ -42,7 +42,7 @@ void Slave::run() {
              
             // Receive the data matrix chunk
             {case Task::INITIAL:
-                cout << endl << "Remote >> mId:" << mId << " Task::INITIAL" <<endl;
+                cout << endl << "Remote >> mId:" << mId << " Task::INITIAL" <<endl<< "  [" <<task->id()<<"]";
                 int dataSize;
                 MPI_Probe(MASTER_ID, 1, MPI_COMM_WORLD, &status);
                 MPI_Get_count(&status, MPI_DOUBLE, &dataSize);
@@ -51,7 +51,7 @@ void Slave::run() {
                 MPI_Request request;
                 MPI_Irecv(&buffer[0], dataSize, MPI_DOUBLE, MASTER_ID, 1, MPI_COMM_WORLD, &request);
                 
-                cout << endl << "Remote >> mId:" << mId << " data received";
+                cout << endl << "Remote >> mId:" << mId << " data received"<< "  [" <<task->id()<<"]";
                 
                 MatrixXd matrix = Map<MatrixXd>(&buffer[0], task->size()[0], task->size()[1]);
                 initialWork(matrix, task->info());
@@ -59,7 +59,7 @@ void Slave::run() {
             }
                 
             {case Task::BASIS_MUL:
-                cout << endl <<"Remote >> mId:" << mId << " Task::BASIS_MUL" <<endl;
+                cout << endl <<"Remote >> mId:" << mId << " Task::BASIS_MUL" << "  [" <<task->id()<<"]"<<endl;
 
                 long dataSize = task->size()[0] * task->size()[1];
                 vector<double> buffer(dataSize);
@@ -81,7 +81,7 @@ void Slave::run() {
             }
         }
     
-        cout << endl << "Remote >> mId:" << mId << " Finish task" <<endl;
+        cout << endl << "Remote >> mId:" << mId << " Finish task" << "  [" <<task->id()<<"]"<<endl;
 
     }
 }

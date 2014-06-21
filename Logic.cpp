@@ -12,6 +12,7 @@
 using namespace std;
 using namespace Eigen;
 
+static int serialNum = 0;
 
 void Logic::start(MatrixXd X, int K, double noise) {
     
@@ -57,6 +58,8 @@ void Logic::start(MatrixXd X, int K, double noise) {
 
 
 // Split data and send to slave for random projection
+// parameter:X data
+// parameter:nTarget    the column size we want to shrink to
 MatrixXd Logic::initialize(MatrixXd X, int nTarget) {
 
     // TODO: how to decide number of chunk??
@@ -76,7 +79,7 @@ MatrixXd Logic::initialize(MatrixXd X, int nTarget) {
     for (int i=0; i<nChunk; i++) {
         IndexType nCol = mChunkVec.at(i).end() - mChunkVec.at(i).start();
         IndexType size[2] = {nDimension, nCol};
-        Task task(Task::INITIAL, size, nTarget);
+        Task task(Task::INITIAL, size, nTarget, ++serialNum);
         TaskParcel tp(task, X.middleCols(mChunkVec.at(i).start(), nCol), callback);
         mDispatcher->submit(tp);
     }
@@ -125,7 +128,7 @@ MatrixXd Logic::computeZ(MatrixXd basis) {
     changeWaitState(STATE_WAIT);
     
     IndexType  size[2] = {basis.cols(), basis.cols()};
-    Task task(Task::BASIS_MUL, size);
+    Task task(Task::BASIS_MUL, size, 0, ++serialNum);
     TaskParcel tp(task, basis, callback);
     mDispatcher->submit(tp);
 

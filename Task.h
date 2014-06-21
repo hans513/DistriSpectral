@@ -84,7 +84,7 @@ public:
     
     static const int RETURN_TAG = 9;
     
-    Task(int cmd, long size[2]=NULL, int info=0): mCmd(cmd), mInfo(info) {
+    Task(int cmd, long size[2]=NULL, int info=0, int id=0): mCmd(cmd), mInfo(info), mId(id) {
         if (size!=NULL) memcpy( mSize, size, sizeof(mSize));
     }
     
@@ -100,10 +100,17 @@ public:
         return mInfo;
     }
     
+    int id() {
+        return mId;
+    }
+    
 private:
     int mCmd;
     long mSize[2];
     int mInfo;
+    
+    // For debugging
+    int mId;
     
 };
 
