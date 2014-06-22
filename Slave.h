@@ -26,6 +26,14 @@
 #include "Task.h"
 #endif
 
+#ifndef __SpecGmm__D3Matrix__
+#include "D3Matrix.h"
+#endif
+
+#ifndef DistriSpectral_Misc_h
+#include "Misc.h"
+#endif
+
 class Slave {
     
 public:
@@ -40,6 +48,7 @@ public:
     // Task functions
     void initialWork(Eigen::MatrixXd input, int target);
     void basisMul(Eigen::MatrixXd);
+    void calTensor(Eigen:: MatrixXd basis);
     
 private:
 

@@ -62,11 +62,11 @@ void Slave::run() {
                 
                 vector<double> buffer(dataSize);
                 cout << endl << "Remote >> mId:" << mId << " Task::INITIAL After bufer vector allocation dataSize "<<dataSize << "  [" <<task->id()<<"]" << endl;
-                MPI_Request request;
+//                MPI_Request request;
                 
                 cout << endl << "Remote >> mId:" << mId << " waiting for data "<< "  [" <<task->id()<<"]" << endl;
-                MPI_Irecv(&buffer[0], dataSize, MPI_DOUBLE, MASTER_ID, 1, MPI_COMM_WORLD, &request);
-                
+                //MPI_Irecv(&buffer[0], dataSize, MPI_DOUBLE, MASTER_ID, 1, MPI_COMM_WORLD, &request);
+                MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, MASTER_ID, 1, MPI_COMM_WORLD, &status);
                 cout << endl << "Remote >> mId:" << mId << " data received"<< "  [" <<task->id()<<"]";
                 
                 MatrixXd matrix = Map<MatrixXd>(&buffer[0], task->size()[0], task->size()[1]);
@@ -75,15 +75,18 @@ void Slave::run() {
             }
                 
             {case Task::BASIS_MUL:
-                cout << endl <<"Remote >> mId:" << mId << " Task::BASIS_MUL" << "  [" <<task->id()<<"]"<<endl;
-
+             case Task::CAL_TENSOR:
+                cout << endl <<"Remote >> mId:" << mId << " Task::"<<  Task::cmdToString(task->cmd()) <<"  dataSize:"<< task->size()[0] << " * " << task->size()[1] << "  [" <<task->id()<<"]"<<endl;
                 long dataSize = task->size()[0] * task->size()[1];
                 vector<double> buffer(dataSize);
                 
                 //MPI_Barrier(MPI_COMM_WORLD);
                 MPI_Bcast(&buffer[0], dataSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
                 MatrixXd matrix = Map<MatrixXd>(&buffer[0], task->size()[0], task->size()[1]);
-                basisMul(matrix);
+                
+                if      (task->cmd() == Task::BASIS_MUL) basisMul(matrix);
+                else if (task->cmd() == Task::CAL_TENSOR) calTensor(matrix);
+
                 break;
             }
             
@@ -148,5 +151,45 @@ void Slave::basisMul(Eigen::MatrixXd basis) {
 
     cout << endl << "Remote >> mId:" << mId << " basisMul Sending result back";
     if (DBG) cout << endl << "RESULT:" << endl << result << endl;
+    MPI_Send(result.data(), result.size(), MPI_DOUBLE, MASTER_ID, Task::RETURN_TAG, MPI_COMM_WORLD);
+}
+
+/**
+ State 5: Calculate tensor
+ */
+
+void Slave::calTensor(Eigen:: MatrixXd whiten) {
+    
+    int k = whiten.cols();
+    
+    if (DBG) cout << endl <<"Remote >> mId:" << mId << " Task::calTensor" <<endl;
+
+    MatrixXd ewx = MatrixXd::Zero(k, 1);
+    D3Matrix<MatrixXd> wxTensor(k, k, k);
+    
+    // For all the matrices in the cache
+    for (int i=0; i<dataVec.size(); i++) {
+        MatrixXd currentLayer = dataVec.at(i);
+        
+        for (int j=0; j<currentLayer.cols(); j++) {
+            MatrixXd wx = whiten.transpose() * currentLayer.col(j);
+            
+            // Calculate E[W'X]
+            ewx += wx;
+
+            // Calculate E[W'X (x)^3]
+            MatrixXd temp = outer(wx,wx).getLayer(0);
+            wxTensor += outer(temp, wx);
+        }
+    }
+
+    // Flatten the result
+    MatrixXd result(k, k*k+1);
+    result.col(0) = ewx;
+    for (int layer=0; layer<k; layer++) {
+        result.middleCols(layer*k+1, k) = wxTensor.getLayer(layer);
+    }
+
+    cout << endl << "Remote >> mId:" << mId << " calTensor Sending result back";
     MPI_Send(result.data(), result.size(), MPI_DOUBLE, MASTER_ID, Task::RETURN_TAG, MPI_COMM_WORLD);
 }

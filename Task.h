@@ -31,7 +31,7 @@ public:
         mCurrentResult = 0;
     }
     
-    void notify(void* data) {
+    virtual void notify(void* data) {
         
         Eigen::MatrixXd matrix = Eigen::Map<Eigen::MatrixXd>((double*)data, mSize[0], mSize[1]);
         
@@ -79,6 +79,7 @@ public:
     static const int TERMINATE = -1;
     static const int INITIAL = 1;
     static const int BASIS_MUL = 2;
+    static const int CAL_TENSOR = 3;
     static const int RESET = 10;
     static const int TEST = 99;
     
@@ -102,6 +103,29 @@ public:
     
     int id() {
         return mId;
+    }
+
+    static std::string cmdToString(int cmd) {
+        switch (cmd) {
+            case Task::INITIAL:
+                return std::string("Task::INITIAL");
+                break;
+            case Task::BASIS_MUL:
+                return std::string("Task::BASIS_MUL");
+                break;
+            case Task::CAL_TENSOR:
+                return std::string("Task::CAL_TENSOR");
+                break;
+            case Task::RESET:
+                return std::string("Task::RESET");
+                break;
+            case Task::TERMINATE:
+                return std::string("Task::TERMINATE");
+                break;
+            default:
+                return std::string("Task:: default??");
+                break;
+        }
     }
     
 private:

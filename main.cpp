@@ -86,7 +86,7 @@ int main( int argc, char *argv[] ) {
         
         DataSettings para(nDimension, nCluster, nDataPerCluster, pow(noise,0.5), unitRadius);
         
-        int nRepeat = 10;
+        int nRepeat = 1;
         
         vector<int64> timeHistory;
         

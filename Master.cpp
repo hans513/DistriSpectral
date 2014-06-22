@@ -50,15 +50,19 @@ void Master::sender() {
                     continue;
                 }
                 cout << endl <<"Master SENDER ==>> send data to slave " << slave << "  [" <<task.id()<<"]"<< endl;
-                      MPI_Request request;
-                MPI_Isend(current.data(), current.dataSize(), MPI_DOUBLE, slave, 1, MPI_COMM_WORLD, &request);
+                //MPI_Request request;
+                //MPI_Isend(current.data(), current.dataSize(), MPI_DOUBLE, slave, 1, MPI_COMM_WORLD, &request);
+                MPI_Send(current.data(), current.dataSize(), MPI_DOUBLE, slave, 1, MPI_COMM_WORLD);
                 cout << endl <<"Master SENDER ==>> finish sending data to slave " << slave << endl;
                 break;
                 
             }
                 
             {case Task::BASIS_MUL:
-                cout << endl << "Master SENDER ==>> BASIS_MUL task "<< "  [" <<task.id()<<"]"<<endl;
+             case Task::CAL_TENSOR:
+                cout << endl << "Master SENDER ==>>"<< Task::cmdToString(task.cmd()) << "  [" <<task.id()<<"]"<<endl;
+
+                
                 for (int slave_id=1; slave_id<mNumProc; slave_id++) {
                     int slave = mAvailSlave.pop();
                     
@@ -77,7 +81,6 @@ void Master::sender() {
                 break;
             }
 
-                
             {default:
                 break;
             }

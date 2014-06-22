@@ -41,7 +41,8 @@ void Logic::start(MatrixXd X, int K, double noise) {
     int64 t4 = GetTimeMs64();
     if(PRINT_MATRIX) cout << endl << endl << "[LOGIC] : W=" << endl << W << endl;
     
-    afterWhiten( X, W, K, noise);
+    //afterWhiten( X, W, K, noise);
+    buildTensor( X, W, K, noise);
     int64 t5 = GetTimeMs64();
     
     if (TIME_MEASURE) {
@@ -126,7 +127,8 @@ MatrixXd Logic::computeZ(MatrixXd basis) {
     // TODO 2=nprocess
     Callback* callback = new Callback(retSize, 1, this, &Logic::computeZ_cb);
     changeWaitState(STATE_WAIT);
-    
+
+    // TODO: check if this is useless??
     IndexType  size[2] = {basis.cols(), basis.cols()};
     Task task(Task::BASIS_MUL, size, 0, ++serialNum);
     TaskParcel tp(task, basis, callback);
@@ -171,6 +173,85 @@ MatrixXd Logic::calculateWhiten(MatrixXd bpj, MatrixXd basis, int K, IndexType  
     return W;
 }
 
+void Logic::buildTensor(MatrixXd X, MatrixXd W, int  K, double sigma) {
+    
+    cout << endl << "[LOGIC] : STATE_5 BUILD TENSOR";
+    
+    // 1. Distribute W to every slaves
+    //    Then wait for callback
+    
+    
+    // The result will be a Flatten matrix which puts k-by-1 and k k-by-K matrices together
+    //                                                E[W'X]     E[W'X (x)^3]
+    // So the size will be k * (1 + k*k)
+    IndexType k = W.cols();
+    IndexType retSize[2] = {k, 1+k*k};
+    
+    // TODO 2=nprocess
+    Callback* callback = new Callback(retSize, 1, this, &Logic::buildTensor_cb);
+    changeWaitState(STATE_WAIT);
+    
+    // TODO: check if this is useless??
+    IndexType size[2] = {W.rows(), W.cols()};
+    Task task(Task::CAL_TENSOR, size, 0, ++serialNum);
+    TaskParcel tp(task, W, callback);
+    mDispatcher->submit(tp);
+    
+    // 2. Each slave compute E[W'x]  and E[W'x (^)3] then send back
+    cout << endl << "[LOGIC] : STATE_5  START TO WAIT";
+    {
+        std::unique_lock<std::mutex> lock(mState_mutex);
+        mState_condition.wait(lock);
+    }
+    cout << endl << "[LOGIC] : STATE_5  FINISH WAITING";
+    
+    MatrixXd result = callback->result();
+    delete callback;
+    
+    IndexType  nData = X.cols();
+    IndexType  nDimension = X.rows();
+
+    result = result / nData;
+    
+    // The first column of the result is E[W'x]
+    MatrixXd EWtX = result.col(0);
+    
+    // The rest of the result is a flattened tensor
+    // Build up the tensor!
+    D3Matrix<MatrixXd> EWtX3(K,K,K);
+    for (int layer=0; layer<k; layer++) {
+        MatrixXd slice = result.middleCols(layer*k+1, k);
+        EWtX3.setLayer(layer, slice);
+    }
+    
+    //cout << endl << "[LOGIC] : distributed EWtX:" <<EWtX<< endl;
+
+    D3Matrix<MatrixXd> sigTensor(K,K,K);
+    
+    for (int i=0; i<nDimension; i++){
+        MatrixXd ei = MatrixXd::Zero(nDimension,1);
+        ei(i,0) = 1;
+        MatrixXd WtEi = W.transpose()*ei;
+        MatrixXd temp1 = outer(EWtX, WtEi).getLayer(0);
+        MatrixXd temp2 = outer(WtEi, EWtX).getLayer(0);
+        MatrixXd temp3 = outer(WtEi, WtEi).getLayer(0);
+        sigTensor +=  outer(temp1, WtEi);
+        sigTensor +=  outer(temp2, WtEi);
+        sigTensor +=  outer(temp3, EWtX);
+    }
+    
+    sigTensor = sigTensor*sigma;
+    D3Matrix<MatrixXd> T = EWtX3 - sigTensor;
+    tensorDecompose(T, W);
+    
+}
+
+void Logic::buildTensor_cb() {
+    
+    changeWaitState(STATE_ACTIVE);
+    mState_condition.notify_one();
+}
+
 void Logic::afterWhiten(MatrixXd X, MatrixXd W, int  K, double sigma) {
     
     cout << endl << "[LOGIC] : STATE_5 AFTER WHITEN";
@@ -202,8 +283,7 @@ void Logic::afterWhiten(MatrixXd X, MatrixXd W, int  K, double sigma) {
     
     MatrixXd EWtX = (W.transpose()*X).rowwise().sum().array() / nData;
     
-    //if (DBG) cout<< endl << endl;
-    //if (DBG) cout<< "EWtX" << endl << EWtX;
+    cout << endl << "[LOGIC] : real EWtX:" <<EWtX<< endl;
     
     D3Matrix<MatrixXd> sigTensor(K,K,K);
     

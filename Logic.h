@@ -3,7 +3,7 @@
 //  DistriSpectral
 //
 //  Created by Huang, Tse-Han on 2014/6/9.
-//  Copyright (c) 2014年 Tse-Han Huang. All rights reserved.
+//  Copyright (c) 2014 Tse-Han Huang. All rights reserved.
 //
 
 #ifndef __DistriSpectral__Logic__
@@ -56,6 +56,7 @@ public:
     void start(MatrixXd X, int K, double noise);
     void initialize_cb();
     void computeZ_cb();
+    void buildTensor_cb();
 
     // Return Estimate centers after computation
     Eigen::MatrixXd centers() {return mCenters;};
@@ -70,9 +71,10 @@ private:
     Eigen::MatrixXd computeZ(Eigen::MatrixXd basis);
     Eigen::MatrixXd calculateWhiten(Eigen::MatrixXd bpj, Eigen::MatrixXd basis
                                     , int K, IndexType nData) ;
+
+    void buildTensor(Eigen::MatrixXd X, Eigen::MatrixXd W, int K, double sigma);
     
 
-    
 
     // hold lock and change mWait
     void changeWaitState(int state);
