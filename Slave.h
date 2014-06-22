@@ -34,6 +34,10 @@
 #include "Misc.h"
 #endif
 
+#ifndef __SpecGmm__Fastfood__
+#include "Fastfood.h"
+#endif /* defined(__SpecGmm__Fastfood__) */
+
 class Slave {
     
 public:

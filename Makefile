@@ -9,6 +9,6 @@ ifeq ($(UNAME_S),Darwin)
 endif
 
 
-main: main.cpp Master.cpp Slave.cpp DataGenerator.cpp Task.cpp Logic.cpp
-	mpicxx -I $(EIGEN) -I $(EIGEN)/unsupported -std=c++11 -o eigenMpi main.cpp Master.cpp Slave.cpp DataGenerator.cpp Task.cpp Logic.cpp 
+main: main.cpp Master.cpp Slave.cpp DataGenerator.cpp Task.cpp Logic.cpp Fastfood.cpp
+	mpicxx -I $(EIGEN) -I $(EIGEN)/unsupported -std=c++11 -o eigenMpi main.cpp Master.cpp Slave.cpp DataGenerator.cpp Task.cpp Logic.cpp Fastfood.cpp
 

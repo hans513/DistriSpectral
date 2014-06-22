@@ -3,7 +3,7 @@
 //  DistriSpectral
 //
 //  Created by Huang, Tse-Han on 2014/6/6.
-//  Copyright (c) 2014年 Tse-Han Huang. All rights reserved.
+//  Copyright (c) 2014 Tse-Han Huang. All rights reserved.
 //
 
 #include "Slave.h"
@@ -113,7 +113,13 @@ void Slave::initialWork(MatrixXd input, int target) {
     if (DBG) cout << endl <<"Remote >> mId:" << mId << " Task::initialWork" <<endl;
     
     dataVec.push_back(input);
+    
+    // Fastfood random projection
+    Fastfood ff(input.cols(), target);
+    MatrixXd result = ff.multiply(input);
 
+    // General random Gaussian projection
+    /*
     srand (time(NULL));
     random_device rd;
     default_random_engine generator(rd());
@@ -128,6 +134,8 @@ void Slave::initialWork(MatrixXd input, int target) {
     }
     
     MatrixXd result = input * gausssian;
+    */
+
     
     cout << endl << "Remote >> mId:" << mId << " InitialWork Sending result back";
     if (DBG) cout << endl << "RESULT:" << endl << result << endl;

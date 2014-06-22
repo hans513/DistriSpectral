@@ -21,6 +21,11 @@
 
 #endif
 
+
+#ifndef __SpecGmm__D3Matrix__
+#include "D3Matrix.h"
+#endif
+
 typedef long long int64;
 typedef unsigned long long uint64;
 
@@ -97,4 +102,18 @@ static D3Matrix<Derived> outer(const MatrixBase<Derived> &A, MatrixBase<Derived>
     
     return ret;
     
+}
+
+static inline long
+pow2roundup (long x)
+{
+    if (x < 0)
+        return 0;
+    --x;
+    x |= x >> 1;
+    x |= x >> 2;
+    x |= x >> 4;
+    x |= x >> 8;
+    x |= x >> 16;
+    return x+1;
 }
