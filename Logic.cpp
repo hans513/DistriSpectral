@@ -17,6 +17,7 @@ static int serialNum = 0;
 void Logic::start(MatrixXd X, int K, double noise) {
     
     cout << endl << endl << "[LOGIC] : START";
+
     changeWaitState(STATE_ACTIVE);
     int64 t0 = GetTimeMs64();
     
@@ -64,7 +65,7 @@ void Logic::start(MatrixXd X, int K, double noise) {
 MatrixXd Logic::initialize(MatrixXd X, int nTarget) {
 
     // TODO: how to decide number of chunk??
-    int nChunk = 4;
+    int nChunk = mDispatcher->nProc();
     int nDimension = X.rows();
     
     int blk = X.cols() / nChunk;

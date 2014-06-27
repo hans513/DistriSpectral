@@ -125,7 +125,7 @@ int main( int argc, char *argv[] ) {
     }
     else {
         // It's slave node
-        Slave slave(myid);
+        Slave slave(myid, numprocs);
         slave.run();
     }
   

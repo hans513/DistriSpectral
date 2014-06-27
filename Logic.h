@@ -61,7 +61,6 @@ public:
     // Return Estimate centers after computation
     Eigen::MatrixXd centers() {return mCenters;};
 
-
     void finish();
     
 private:

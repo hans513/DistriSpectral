@@ -40,4 +40,9 @@ public:
         this->d_queue.pop_back();
         return rc;
     }
+    
+    void clear() {
+        std::unique_lock<std::mutex> lock(this->d_mutex);
+        d_queue.clear();
+    }
 };

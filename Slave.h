@@ -38,6 +38,9 @@
 #include "Fastfood.h"
 #endif /* defined(__SpecGmm__Fastfood__) */
 
+//static Eigen::MatrixXd Global_sum(MatrixXd myData, int my_rank, int p, MPI_Comm comm);
+//static Eigen::MatrixXd receiveMatrixFrom(int sender, long size[2]);
+
 class Slave {
     
 public:
@@ -45,7 +48,7 @@ public:
     static const int MASTER_ID = 0;
     static const int DBG = 0;
     
-    Slave(int id): mId(id) {}
+    Slave(int id, int nProc): mId(id), mTotalProc(nProc) {}
     
     void run();
     
@@ -55,10 +58,14 @@ public:
     void calTensor(Eigen:: MatrixXd basis);
     
 private:
-
+    
     int mId;
+    int mTotalProc;
     void resetDataCache() {
         dataVec.clear();
     }
     vector<Eigen::MatrixXd> dataVec;
+    
+    Eigen::MatrixXd Global_sum(MatrixXd myData, int my_rank, int p, MPI_Comm comm);
+    Eigen::MatrixXd receiveMatrixFrom(int sender, long size[2]);
 };

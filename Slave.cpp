@@ -80,7 +80,6 @@ void Slave::run() {
                 long dataSize = task->size()[0] * task->size()[1];
                 vector<double> buffer(dataSize);
                 
-                //MPI_Barrier(MPI_COMM_WORLD);
                 MPI_Bcast(&buffer[0], dataSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
                 MatrixXd matrix = Map<MatrixXd>(&buffer[0], task->size()[0], task->size()[1]);
                 
@@ -140,6 +139,7 @@ void Slave::initialWork(MatrixXd input, int target) {
     cout << endl << "Remote >> mId:" << mId << " InitialWork Sending result back";
     if (DBG) cout << endl << "RESULT:" << endl << result << endl;
     MPI_Send(result.data(), result.size(), MPI_DOUBLE, MASTER_ID, Task::RETURN_TAG, MPI_COMM_WORLD);
+
 }
 
 
@@ -159,7 +159,8 @@ void Slave::basisMul(Eigen::MatrixXd basis) {
 
     cout << endl << "Remote >> mId:" << mId << " basisMul Sending result back";
     if (DBG) cout << endl << "RESULT:" << endl << result << endl;
-    MPI_Send(result.data(), result.size(), MPI_DOUBLE, MASTER_ID, Task::RETURN_TAG, MPI_COMM_WORLD);
+    Global_sum(result, mId, mTotalProc, MPI_COMM_WORLD);
+    cout << endl << "Remote >> mId:" << mId << " Finish Sending result back";
 }
 
 /**
@@ -199,5 +200,120 @@ void Slave::calTensor(Eigen:: MatrixXd whiten) {
     }
 
     cout << endl << "Remote >> mId:" << mId << " calTensor Sending result back";
-    MPI_Send(result.data(), result.size(), MPI_DOUBLE, MASTER_ID, Task::RETURN_TAG, MPI_COMM_WORLD);
+    Global_sum(result, mId, mTotalProc, MPI_COMM_WORLD);
+    cout << endl << "Remote >> mId:" << mId << " Finish Sending result back";
 }
+
+int isPowerOfTwo (unsigned int x)
+{
+    return ((x != 0) && ((x & (~x + 1)) == x));
+}
+
+MatrixXd Slave::receiveMatrixFrom(int sender, long size[2]) {
+    
+    MPI_Status status;
+    int dataSize;
+    MPI_Probe(sender, Task::TREESUM_TAG, MPI_COMM_WORLD, &status);
+    MPI_Get_count(&status, MPI_DOUBLE, &dataSize);
+    
+    //cout << endl << "Remote >> mId:" << my_rank << " 1st round Global_sum:"<<dataSize << endl;
+    
+    vector<double> buffer(dataSize);
+    //cout << endl << "Remote >> mId:" << my_rank << " 1st round Global_sum Waiting "<<partner << endl;
+    
+    //MPI_Irecv(&buffer[0], dataSize, MPI_DOUBLE, MASTER_ID, 1, MPI_COMM_WORLD, &request);
+    MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, sender, Task::TREESUM_TAG, MPI_COMM_WORLD, &status);
+    //cout << endl << "Remote >> mId:" << my_rank << " 1st round Global_sum data received";
+    
+    MatrixXd matrix = Map<MatrixXd>(&buffer[0], size[0], size[1]);
+    
+    return matrix;
+}
+
+/*-----------------------------------------------------------------*/
+/* Function:    Global_sum
+ * Purpose:     Compute the global sum of ints stored on the processes
+ *
+ * Input args:  my_contrib = process's contribution to the global sum
+ *              my_rank = process's rank
+ *              p = number of processes
+ *              comm = communicator
+ * Return val:  Sum of each process's my_contrib:  valid only
+ *              on process 0.
+ *
+ * Notes:
+ *    1.  Uses tree structured communication.
+ *    2.  p, the number of processes must be a power of 2.
+ *    3.  The return value is valid only on process 0.
+ *    4.  The pairing of the processes is done using bitwise
+ *        exclusive or.  Here's a table showing the rule for
+ *        for bitwise exclusive or
+ *           X Y X^Y
+ *           0 0  0
+ *           0 1  1
+ *           1 0  1
+ *           1 1  0
+ *        Here's a table showing the process pairing with 8
+ *        processes (r = my_rank, other column heads are bitmask)
+ *           r     001 010 100
+ *           -     --- --- ---
+ *           0 000 001 010 100
+ *           1 001 000  x   x
+ *           2 010 011 000  x
+ *           3 011 010  x   x
+ *           4 100 101 110 000
+ *           5 101 100  x   x
+ *           6 110 111 100  x
+ *           7 111 110  x   x
+ */
+MatrixXd Slave::Global_sum(MatrixXd myData, int my_rank, int nProc, MPI_Comm comm) {
+    
+    cout << endl << "Remote >> mId:" << my_rank << " Global_sum!!"<< endl;
+    
+    MatrixXd   sum = myData;
+    int        partner;
+    int        done = 0;
+    unsigned   bitmask = 1;
+    
+    if (!isPowerOfTwo(nProc)) {
+        int originProc = nProc;
+        nProc = pow2roundup(nProc) / 2;
+        
+        // receiver
+        if (my_rank < nProc && my_rank < (originProc-nProc)) {
+            partner = my_rank + nProc;
+            long size[2] = {sum.rows(), sum.cols()};
+            MatrixXd matrix = receiveMatrixFrom(partner, size);
+            sum += matrix;
+        }
+        // sender
+        else if (my_rank >= nProc) {
+            partner = my_rank - nProc;
+            cout << endl << "Remote >> mId:" << my_rank << "1st Global_sum Sending "<<partner << endl;
+            MPI_Send(sum.data(), sum.size(), MPI_DOUBLE, partner, Task::TREESUM_TAG, MPI_COMM_WORLD);
+            done = 1;
+        }
+        
+    }
+    
+    while (!done && bitmask < nProc) {
+        partner = my_rank ^ bitmask;
+        
+         cout << endl << "Remote >> mId:" << my_rank << " Global_sum PARTNER is="<< partner << endl;
+        
+        if (my_rank < partner) {
+            long size[2] = {sum.rows(), sum.cols()};
+            MatrixXd matrix = receiveMatrixFrom(partner, size);
+            sum += matrix;
+            bitmask <<= 1;
+        } else {
+            cout << endl << "Remote >> mId:" << my_rank << " Global_sum Sending "<<partner << endl;
+            MPI_Send(sum.data(), sum.size(), MPI_DOUBLE, partner, Task::TREESUM_TAG, MPI_COMM_WORLD);
+            done = 1;
+        }
+    }
+    
+    /* Valid only on 0 */
+        cout << endl << "Remote >> mId:" << my_rank << " end Global_sum!!"<< endl;
+    return sum;
+}  /* Global_sum */

@@ -55,6 +55,10 @@ public:
     
     void reset();
     
+    int nProc() {
+        return mNumProc;
+    }
+    
 private:
 
     int mNumProc;
@@ -67,6 +71,8 @@ private:
     std::mutex  mCallback_mutex;
     // Manipulate mCallbackVec
     void setCallback(int slave, Callback* callback);
+    
+    void setTreeSumCallback(Callback* callback);
     
     // For debug
     void printCallback () {

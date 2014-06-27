@@ -84,6 +84,7 @@ public:
     static const int TEST = 99;
     
     static const int RETURN_TAG = 9;
+    static const int TREESUM_TAG = 9;
     
     Task(int cmd, long size[2]=NULL, int info=0, int id=0): mCmd(cmd), mInfo(info), mId(id) {
         if (size!=NULL) memcpy( mSize, size, sizeof(mSize));

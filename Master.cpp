@@ -61,22 +61,19 @@ void Master::sender() {
             {case Task::BASIS_MUL:
              case Task::CAL_TENSOR:
                 cout << endl << "Master SENDER ==>>"<< Task::cmdToString(task.cmd()) << "  [" <<task.id()<<"]"<<endl;
-
                 
-                for (int slave_id=1; slave_id<mNumProc; slave_id++) {
-                    int slave = mAvailSlave.pop();
-                    
-                    MPI_Send(&task, sizeof(Task), MPI_CHAR, slave_id, 0, MPI_COMM_WORLD);
-                    if (DBG) cout << endl << "Master SENDER ==>> setCallback for " <<slave;
-                    Callback* cb = current.callback();
-                    // TODO
-                    cb->setTargetResult(mNumProc-1);
-                    setCallback(slave, current.callback());
+                // Assume all the slaves are idle now. We just send the task to every slaves with using the queue.
+                // WARNING: the queue will be messy after these tasks
+                for (int slave=1; slave<mNumProc; slave++) {
+                    MPI_Send(&task, sizeof(Task), MPI_CHAR, slave, 0, MPI_COMM_WORLD);
                 }
                 
+                // Set callback function here, since there are only few nodes are responsible for /
+                // sending result back to master
+                setTreeSumCallback(current.callback());
+
                 printCallback ();
-                if (DBG) cout << endl << "Master SENDER ==>> BASIS_MUL MPI_Barrier ";
-                //MPI_Barrier(MPI_COMM_WORLD);
+
                 MPI_Bcast(current.data(), current.dataSize(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
                 break;
             }
@@ -126,9 +123,9 @@ void Master::receiver() {
         printCallback ();
 
         // Put the slave back to available pool
-        cout << endl << "Master RECEIVER <<== Before push slave back";
+        if (DBG) cout << endl << "Master RECEIVER <<== Before push slave back";
         mAvailSlave.push(status.MPI_SOURCE);
-        cout << endl << "Master RECEIVER <<== After push slave back";
+        if (DBG) cout << endl << "Master RECEIVER <<== After push slave back";
 
     }
 
@@ -168,10 +165,27 @@ void Master::setCallback(int slave, Callback* callback) {
 }
 
 void Master::reset() {
+
+    mAvailSlave.clear();
     Task task(Task::RESET);
     for (int id=1; id<mNumProc; id++) {
         MPI_Send(&task, sizeof(task), MPI_CHAR, id, 0, MPI_COMM_WORLD);
+             mAvailSlave.push(id);
     }
+}
+
+void Master::setTreeSumCallback(Callback* callback) {
+    
+    int nFeedback = 0;
+    int partner = 1;
+ 
+    while (partner < mNumProc) {
+        setCallback(partner, callback);
+        nFeedback++;
+        partner <<= 1;
+    }
+
+    callback->setTargetResult(nFeedback);
 }
 
 /*
