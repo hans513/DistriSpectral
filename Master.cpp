@@ -43,7 +43,7 @@ void Master::sender() {
                 // register callback function
                 setCallback(slave, current.callback());
                 
-                MPI_Send(&task, sizeof(Task), MPI_CHAR, slave, 0, MPI_COMM_WORLD);
+                MPI_Send(&task, sizeof(Task), MPI_BYTE, slave, 0, MPI_COMM_WORLD);
                 
                 if (current.data()==NULL) {
                     cout << endl <<"Master SENDER ==>> !!!!!!No data to be sent ???? " << slave << endl;
@@ -65,7 +65,7 @@ void Master::sender() {
                 // Assume all the slaves are idle now. We just send the task to every slaves with using the queue.
                 // WARNING: the queue will be messy after these tasks
                 for (int slave=1; slave<mNumProc; slave++) {
-                    MPI_Send(&task, sizeof(Task), MPI_CHAR, slave, 0, MPI_COMM_WORLD);
+                    MPI_Send(&task, sizeof(Task), MPI_BYTE, slave, 0, MPI_COMM_WORLD);
                 }
                 
                 // Set callback function here, since there are only few nodes are responsible for /
@@ -143,7 +143,7 @@ void Master::terminate() {
     
     Task task(Task::TERMINATE);
     for (int id=1; id<mNumProc; id++) {
-        MPI_Send(&task, sizeof(task), MPI_CHAR, id, 0, MPI_COMM_WORLD);
+        MPI_Send(&task, sizeof(task), MPI_BYTE, id, 0, MPI_COMM_WORLD);
     }
 
     mExit = 1;
@@ -169,7 +169,7 @@ void Master::reset() {
     mAvailSlave.clear();
     Task task(Task::RESET);
     for (int id=1; id<mNumProc; id++) {
-        MPI_Send(&task, sizeof(task), MPI_CHAR, id, 0, MPI_COMM_WORLD);
+        MPI_Send(&task, sizeof(task), MPI_BYTE, id, 0, MPI_COMM_WORLD);
              mAvailSlave.push(id);
     }
 }
@@ -232,7 +232,7 @@ void Master::test_initial() {
     
     Task task(Task::INITIAL, size);
     
-    MPI_Send(&task, sizeof(task), MPI_CHAR, 1, 0, MPI_COMM_WORLD);
+    MPI_Send(&task, sizeof(task), MPI_BYTE, 1, 0, MPI_COMM_WORLD);
     MPI_Send(a.data(), a.size(), MPI_DOUBLE, 1, 1, MPI_COMM_WORLD);
     
 }

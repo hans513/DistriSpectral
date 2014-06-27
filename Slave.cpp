@@ -33,7 +33,7 @@ void Slave::run() {
         cout << endl;
         
         // Receive remote task here
-        MPI_Recv(taskBuf, sizeof(Task), MPI_CHAR, MASTER_ID, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(taskBuf, sizeof(Task), MPI_BYTE, MASTER_ID, 0, MPI_COMM_WORLD, &status);
         Task* task = (Task*) taskBuf;
         
         cout << endl << "Remote >> mId:" << mId << " Got task:" <<task->cmd()<< "  [" <<task->id()<<"]";
