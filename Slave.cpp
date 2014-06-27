@@ -48,32 +48,15 @@ void Slave::run() {
                 break;
             }
              
-            // Receive the data matrix chunk
+            // Receiving the data matrix chunk
             {case Task::INITIAL:
                 cout << endl << "Remote >> mId:" << mId << " Task::INITIAL"<< "  [" <<task->id()<<"]" << endl;
-                int dataSize;
-                MPI_Probe(MASTER_ID, 1, MPI_COMM_WORLD, &status);
-                
-                cout << endl << "Remote >> mId:" << mId << " Task::INITIAL Probe"<< "  [" <<task->id()<<"]" << endl;
-                
-                MPI_Get_count(&status, MPI_DOUBLE, &dataSize);
-                
-                cout << endl << "Remote >> mId:" << mId << " Task::INITIAL GetCount:"<<dataSize << " going to allocate vector  [" <<task->id()<<"]" << endl;
-                
-                vector<double> buffer(dataSize);
-                cout << endl << "Remote >> mId:" << mId << " Task::INITIAL After bufer vector allocation dataSize "<<dataSize << "  [" <<task->id()<<"]" << endl;
-//                MPI_Request request;
-                
-                cout << endl << "Remote >> mId:" << mId << " waiting for data "<< "  [" <<task->id()<<"]" << endl;
-                //MPI_Irecv(&buffer[0], dataSize, MPI_DOUBLE, MASTER_ID, 1, MPI_COMM_WORLD, &request);
-                MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, MASTER_ID, 1, MPI_COMM_WORLD, &status);
-                cout << endl << "Remote >> mId:" << mId << " data received"<< "  [" <<task->id()<<"]";
-                
-                MatrixXd matrix = Map<MatrixXd>(&buffer[0], task->size()[0], task->size()[1]);
+                MatrixXd matrix = receiveMatrixFrom(MASTER_ID, Task::DATA_TAG, task->size());
                 initialWork(matrix, task->info());
                 break;
             }
-                
+            
+            // Receving the broadcast
             {case Task::BASIS_MUL:
              case Task::CAL_TENSOR:
                 cout << endl <<"Remote >> mId:" << mId << " Task::"<<  Task::cmdToString(task->cmd()) <<"  dataSize:"<< task->size()[0] << " * " << task->size()[1] << "  [" <<task->id()<<"]"<<endl;
@@ -209,11 +192,11 @@ int isPowerOfTwo (unsigned int x)
     return ((x != 0) && ((x & (~x + 1)) == x));
 }
 
-MatrixXd Slave::receiveMatrixFrom(int sender, long size[2]) {
+MatrixXd Slave::receiveMatrixFrom(int sender, int tag, long size[2]) {
     
     MPI_Status status;
     int dataSize;
-    MPI_Probe(sender, Task::TREESUM_TAG, MPI_COMM_WORLD, &status);
+    MPI_Probe(sender, tag, MPI_COMM_WORLD, &status);
     MPI_Get_count(&status, MPI_DOUBLE, &dataSize);
     
     //cout << endl << "Remote >> mId:" << my_rank << " 1st round Global_sum:"<<dataSize << endl;
@@ -222,7 +205,7 @@ MatrixXd Slave::receiveMatrixFrom(int sender, long size[2]) {
     //cout << endl << "Remote >> mId:" << my_rank << " 1st round Global_sum Waiting "<<partner << endl;
     
     //MPI_Irecv(&buffer[0], dataSize, MPI_DOUBLE, MASTER_ID, 1, MPI_COMM_WORLD, &request);
-    MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, sender, Task::TREESUM_TAG, MPI_COMM_WORLD, &status);
+    MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, sender, tag, MPI_COMM_WORLD, &status);
     //cout << endl << "Remote >> mId:" << my_rank << " 1st round Global_sum data received";
     
     MatrixXd matrix = Map<MatrixXd>(&buffer[0], size[0], size[1]);
@@ -283,7 +266,7 @@ MatrixXd Slave::Global_sum(MatrixXd myData, int my_rank, int nProc, MPI_Comm com
         if (my_rank < nProc && my_rank < (originProc-nProc)) {
             partner = my_rank + nProc;
             long size[2] = {sum.rows(), sum.cols()};
-            MatrixXd matrix = receiveMatrixFrom(partner, size);
+            MatrixXd matrix = receiveMatrixFrom(partner, Task::TREESUM_TAG, size);
             sum += matrix;
         }
         // sender
@@ -303,7 +286,7 @@ MatrixXd Slave::Global_sum(MatrixXd myData, int my_rank, int nProc, MPI_Comm com
         
         if (my_rank < partner) {
             long size[2] = {sum.rows(), sum.cols()};
-            MatrixXd matrix = receiveMatrixFrom(partner, size);
+            MatrixXd matrix = receiveMatrixFrom(partner, Task::TREESUM_TAG, size);
             sum += matrix;
             bitmask <<= 1;
         } else {

@@ -83,6 +83,7 @@ public:
     static const int RESET = 10;
     static const int TEST = 99;
     
+    static const int DATA_TAG = 1;
     static const int RETURN_TAG = 9;
     static const int TREESUM_TAG = 9;
     

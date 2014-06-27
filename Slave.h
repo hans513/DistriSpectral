@@ -67,5 +67,5 @@ private:
     vector<Eigen::MatrixXd> dataVec;
     
     Eigen::MatrixXd Global_sum(MatrixXd myData, int my_rank, int p, MPI_Comm comm);
-    Eigen::MatrixXd receiveMatrixFrom(int sender, long size[2]);
+    Eigen::MatrixXd receiveMatrixFrom(int sender, int tag, long size[2]);
 };
