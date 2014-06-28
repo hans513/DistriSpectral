@@ -29,6 +29,7 @@ void Logic::start(MatrixXd X, int K, double noise) {
     
     MatrixXd rpj = initialize(X, p);
     int64 t1 = GetTimeMs64();
+
     
     MatrixXd basis = calculateBasis(rpj, p);
     int64 t2 = GetTimeMs64();
@@ -56,6 +57,7 @@ void Logic::start(MatrixXd X, int K, double noise) {
         cout << endl <<  "* Time: TOTAL time consumption\t\t\t  " << (t5-t0) << "\t*";
         cout << endl <<"*********************************************************" << endl;
     }
+     
 }
 
 
@@ -85,6 +87,7 @@ MatrixXd Logic::initialize(MatrixXd X, int nTarget) {
         TaskParcel tp(task, X.middleCols(mChunkVec.at(i).start(), nCol), callback);
         mDispatcher->submit(tp);
     }
+    
     
     cout << endl << "[LOGIC] : STATE_1  START TO WAIT";
     {

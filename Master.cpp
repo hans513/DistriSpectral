@@ -18,6 +18,9 @@ void Master::run() {
 
 void Master::sender() {
     
+    pid_t pid = getpid();
+    cout << endl <<"Master SENDER ==>> pid:"  << pid << endl;
+    
     while (!mExit) {
         
         cout << endl <<"Master SENDER ==>> pop next task" << endl;
@@ -50,8 +53,7 @@ void Master::sender() {
                     continue;
                 }
                 cout << endl <<"Master SENDER ==>> send data to slave " << slave << "  [" <<task.id()<<"]"<< endl;
-                //MPI_Request request;
-                //MPI_Isend(current.data(), current.dataSize(), MPI_DOUBLE, slave, 1, MPI_COMM_WORLD, &request);
+                cout << endl << "Master SENDER ==>> Matrix size:"  << current.dataSize();
                 MPI_Send(current.data(), current.dataSize(), MPI_DOUBLE, slave, 1, MPI_COMM_WORLD);
                 cout << endl <<"Master SENDER ==>> finish sending data to slave " << slave << endl;
                 break;
@@ -90,6 +92,10 @@ void Master::sender() {
 
 void Master::receiver() {
     
+    pid_t pid = getpid();
+    cout << endl <<"Master RECEIVER ==>> pid:"  << pid << endl;
+
+    
     int dataSize;
     MPI_Status status;
     
@@ -98,12 +104,14 @@ void Master::receiver() {
         cout << endl <<"Master RECEIVER <<== wait to receive next msg" << endl;
         
         // May Block here
-        MPI_Probe(MPI_ANY_SOURCE, Task::RETURN_TAG, MPI_COMM_WORLD, &status);
-        if (mExit) break;
+        MPI_Probe(MPI_ANY_SOURCE, Task::RETURN_TAG, mComm, &status);
+        
         
         MPI_Get_count(&status, MPI_DOUBLE, &dataSize);
+        cout << endl <<"Master RECEIVER <<== about to receive dataSize:"<< dataSize << endl;
         vector<double> buffer(dataSize);
-        MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, &status);
+        MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, status.MPI_SOURCE, status.MPI_TAG, mComm, &status);
+        if (mExit) break;
         
         cout << endl <<"Master RECEIVER <<== receive from slave " << status.MPI_SOURCE;
         
@@ -155,8 +163,8 @@ void Master::terminate() {
     // Send fake message to RECEIVER for termination
     MatrixXd nullMatrix(1,1);
     nullMatrix << 0;
-    MPI_Send(nullMatrix.data(), nullMatrix.size(), MPI_DOUBLE, 0, Task::RETURN_TAG, MPI_COMM_WORLD);
-
+    MPI_Send(nullMatrix.data(), nullMatrix.size(), MPI_DOUBLE, 0, Task::RETURN_TAG, mComm);
+    
 }
 
 void Master::setCallback(int slave, Callback* callback) {

@@ -51,7 +51,15 @@ int main( int argc, char *argv[] ) {
     /*Determines the rank of the calling process in the communicator */
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     
+    MPI_Group  orig_group, new_group;
+    MPI_Comm   new_comm;
+    MPI_Comm_group(MPI_COMM_WORLD, &orig_group);
+    MPI_Comm_create(MPI_COMM_WORLD, orig_group, &new_comm);
+    int new_rank;
     if(myid==0) {
+        
+        MPI_Group_rank (orig_group, &new_rank);
+        cout << endl << "MASTER: newRank:" <<new_rank;
         
         // Default settings
         int nDimension = 10;
@@ -76,7 +84,7 @@ int main( int argc, char *argv[] ) {
         
         
         // It's master node
-        Master master(numprocs);
+        Master master(numprocs, new_comm);
 
         // The thread that sends task to slaves
         std::thread sender(&Master::sender, &master);
@@ -114,6 +122,7 @@ int main( int argc, char *argv[] ) {
         sender.join();
         receiver.join();
 
+
         float average=0;
         for (int i=0; i<timeHistory.size(); i++) {
             cout << endl << "Trail " << i << "\tTime:\t" << timeHistory.at(i);
@@ -124,8 +133,12 @@ int main( int argc, char *argv[] ) {
     
     }
     else {
+        
+        MPI_Group_rank (orig_group, &new_rank);
+        cout << endl << "SLAVE: id:"<< myid <<" newRank:" <<new_rank;
+        
         // It's slave node
-        Slave slave(myid, numprocs);
+        Slave slave(myid, numprocs, new_comm);
         slave.run();
     }
   

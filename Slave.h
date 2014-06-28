@@ -14,6 +14,7 @@
 #include <random>
 #include <stdlib.h>
 #include <sys/param.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include <Eigen/Dense>
@@ -48,7 +49,7 @@ public:
     static const int MASTER_ID = 0;
     static const int DBG = 0;
     
-    Slave(int id, int nProc): mId(id), mTotalProc(nProc) {}
+    Slave(int id, int nProc, MPI_Comm newComm): mId(id), mTotalProc(nProc), mComm(newComm) {}
     
     void run();
     
@@ -65,6 +66,8 @@ private:
         dataVec.clear();
     }
     vector<Eigen::MatrixXd> dataVec;
+    
+    MPI_Comm mComm;
     
     Eigen::MatrixXd Global_sum(MatrixXd myData, int my_rank, int p, MPI_Comm comm);
     Eigen::MatrixXd receiveMatrixFrom(int sender, int tag, long size[2]);

@@ -151,9 +151,9 @@ public:
     
     TaskParcel(Task task): mTask(task){};
 
-    Task task() {return mTask;}
-    void* data() {return mData.data();}
-    int dataSize(){return mData.size();}
+    Task task()     {return mTask;}
+    void* data()    {return mData.data();}
+    int dataSize()  {return mData.size();}
     Callback* callback() {return mCallback;}
     
     Eigen::MatrixXd matrix() {return mData;}

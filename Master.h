@@ -16,6 +16,9 @@
 #include <Eigen/Dense>
 #include "mpi.h"
 
+#include <sys/types.h>
+#include <unistd.h>
+
 #endif /* defined(__DistriSpectral__Master__) */
 
 #ifndef __DistriSpectral__Task__
@@ -37,7 +40,7 @@ public:
     static const int DBG = 1;
     static const int DBG_CALLBACK = 1;
     
-    Master(int numproc): mNumProc(numproc) {
+    Master(int numproc, MPI_Comm newComm): mNumProc(numproc), mComm(newComm)  {
         mExit = 0;
         for (int i=1; i<numproc; i++) {
             mAvailSlave.push(i);
@@ -63,6 +66,7 @@ private:
 
     int mNumProc;
     int mExit;
+    MPI_Comm mComm;
     
     BlockingQueue<TaskParcel> mTaskQueue;
     BlockingQueue<int> mAvailSlave;
