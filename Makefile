@@ -2,6 +2,8 @@
 UNAME_S:=$(shell uname -s)
 ifeq ($(UNAME_S),Linux)
 	EIGEN=/home/hans/eigen
+	CHCXX=/usr/bin/mpicxx.mpich
+	CHEXE=/usr/bin/mpiexec.mpich
 endif
 ifeq ($(UNAME_S),Darwin)
 	EIGEN=/Users/hans/eigen
@@ -20,3 +22,11 @@ run: eigenMpi
 
 chrun: eigenMpich
 	$(CHEXE) -np $(N) ./eigenMpich
+
+remoteRun:
+	cp eigenMpi ~/mpi_shared/
+	mpiexec --host ubuntu1,ubuntu2 -n 3 mpi_shared/eigenMpi
+
+remoteChrun:
+	cp eigenMpich ~/mpi_shared/
+	$(CHEXE) --host ubuntu1,ubuntu2 -n 3 mpi_shared/eigenMpi
