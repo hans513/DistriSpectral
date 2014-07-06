@@ -37,10 +37,11 @@ class Master {
     
 public:
     
-    static const int DBG = 1;
-    static const int DBG_CALLBACK = 1;
+    static const int DBG = 0;
+    static const int DBG_CALLBACK = 0;
     
-    Master(int numproc, MPI_Comm newComm): mNumProc(numproc), mComm(newComm)  {
+    Master(int numproc, int enableFf, int enableSvd, MPI_Comm newComm)
+    : mNumProc(numproc), mComm(newComm), mWithFastfood(enableFf), mWithDistSvd(enableSvd)  {
         mExit = 0;
         for (int i=1; i<numproc; i++) {
             mAvailSlave.push(i);
@@ -77,6 +78,10 @@ private:
     void setCallback(int slave, Callback* callback);
     
     void setTreeSumCallback(Callback* callback);
+    
+    // Settings
+    int mWithFastfood;
+    int mWithDistSvd;
     
     // For debug
     void printCallback () {

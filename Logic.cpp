@@ -44,8 +44,11 @@ void Logic::start(MatrixXd X, int K, double noise) {
     if(PRINT_MATRIX) cout << endl << endl << "[LOGIC] : W=" << endl << W << endl;
     
     //afterWhiten( X, W, K, noise);
-    buildTensor( X, W, K, noise);
+    D3Matrix<MatrixXd> T = buildTensor( X, W, K, noise);
     int64 t5 = GetTimeMs64();
+    
+    tensorDecompose(T, W);
+    int64 t6 = GetTimeMs64();
     
     if (TIME_MEASURE) {
         cout << endl <<  endl <<"******************** TIME MEASUREMENT *******************";
@@ -53,8 +56,9 @@ void Logic::start(MatrixXd X, int K, double noise) {
         cout << endl <<  "* Time: S2 Calculate Basis (Only master)\t  " << (t2-t1) <<"\t*";
         cout << endl <<  "* Time: S3 Basis Multiplication (Distributed)\t  " << (t3-t2) <<"\t*";
         cout << endl <<  "* Time: S4 Calculate Whiten Matrix (Only master)  " << (t4-t3) <<"\t*";
-        cout << endl <<  "* Time: S5 Tensor Decomposition (Only master)\t  " << (t5-t4) <<"\t*";
-        cout << endl <<  "* Time: TOTAL time consumption\t\t\t  " << (t5-t0) << "\t*";
+        cout << endl <<  "* Time: S5 Tensor Building (Distributed)\t  " << (t5-t4) <<"\t*";
+        cout << endl <<  "* Time: S6 Tensor Decomposition (Only master)\t  " << (t6-t5) <<"\t*";
+        cout << endl <<  "* Time: TOTAL time consumption\t\t\t  " << (t6-t0) << "\t*";
         cout << endl <<"*********************************************************" << endl;
     }
      
@@ -111,16 +115,24 @@ void Logic::initialize_cb() {
 // TODO: shoud I use svd instead?
 MatrixXd Logic::calculateBasis(MatrixXd rpj, int nBasis) {
     
-    //const JacobiSVD<MatrixXd> svd(rpj, ComputeThinU | ComputeThinV);
-    //MatrixXd Ub = svd.matrixU();
     
     cout << endl << "[LOGIC] : STATE_2 CALCULATE BASIS";
     
+
+    const JacobiSVD<MatrixXd> svd(rpj, ComputeThinU | ComputeThinV);
+    MatrixXd Ub = svd.matrixU();
+    
+
+    return Ub;
+    
+    
+    /*
     HouseholderQR<MatrixXd> qr(rpj);
     MatrixXd Q = MatrixXd::Identity(rpj.rows(), nBasis);
     Q = qr.householderQ() * Q;
 
     return Q;
+    */
 }
 
 // Send basis to every slave and aggregate the result after multiplication
@@ -177,7 +189,7 @@ MatrixXd Logic::calculateWhiten(MatrixXd bpj, MatrixXd basis, int K, IndexType  
     return W;
 }
 
-void Logic::buildTensor(MatrixXd X, MatrixXd W, int  K, double sigma) {
+D3Matrix<MatrixXd> Logic::buildTensor(MatrixXd X, MatrixXd W, int  K, double sigma) {
     
     cout << endl << "[LOGIC] : STATE_5 BUILD TENSOR";
     
@@ -246,8 +258,8 @@ void Logic::buildTensor(MatrixXd X, MatrixXd W, int  K, double sigma) {
     
     sigTensor = sigTensor*sigma;
     D3Matrix<MatrixXd> T = EWtX3 - sigTensor;
-    tensorDecompose(T, W);
     
+    return T;
 }
 
 void Logic::buildTensor_cb() {

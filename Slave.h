@@ -49,14 +49,10 @@ public:
     static const int MASTER_ID = 0;
     static const int DBG = 0;
     
-    Slave(int id, int nProc, MPI_Comm newComm): mId(id), mTotalProc(nProc), mComm(newComm) {}
+    Slave(int id, int nProc, MPI_Comm newComm):
+        mId(id), mTotalProc(nProc),mComm(newComm) {}
     
     void run();
-    
-    // Task functions
-    void initialWork(Eigen::MatrixXd input, int target);
-    void basisMul(Eigen::MatrixXd);
-    void calTensor(Eigen:: MatrixXd basis);
     
 private:
     
@@ -69,6 +65,15 @@ private:
     
     MPI_Comm mComm;
     
+    // Task functions
+    void initialWork(Eigen::MatrixXd input, int target);
+    void basisMul(Eigen::MatrixXd);
+    void calTensor(Eigen:: MatrixXd basis);
+    
     Eigen::MatrixXd Global_sum(MatrixXd myData, int my_rank, int p, MPI_Comm comm);
     Eigen::MatrixXd receiveMatrixFrom(int sender, int tag, long size[2]);
+    
+    // Settings
+    int mWithFastfood;
+    int mWithDistSvd;
 };

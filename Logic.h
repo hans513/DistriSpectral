@@ -71,7 +71,7 @@ private:
     Eigen::MatrixXd calculateWhiten(Eigen::MatrixXd bpj, Eigen::MatrixXd basis
                                     , int K, IndexType nData) ;
 
-    void buildTensor(Eigen::MatrixXd X, Eigen::MatrixXd W, int K, double sigma);
+    D3Matrix<MatrixXd> buildTensor(Eigen::MatrixXd X, Eigen::MatrixXd W, int K, double sigma);
     
 
 

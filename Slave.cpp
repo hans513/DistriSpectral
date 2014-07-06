@@ -13,15 +13,6 @@ using namespace Eigen;
 
 void Slave::run() {
     
-    char name[MAXHOSTNAMELEN];
-    size_t namelen = MAXHOSTNAMELEN;
-    pid_t pid = getpid();
-    
-    if (gethostname(name, namelen) != -1) {
-        cout << endl << "Remote >> mId:" << mId << " Map to machine:" << name << "  Pid=" << pid;
-    }
-    
-
     // Buffer for receiving the remote task
     char taskBuf[sizeof(Task)];
 
@@ -75,6 +66,20 @@ void Slave::run() {
             
             {case Task::RESET:
                 resetDataCache();
+                // For reset task, the size contains settings.
+                mWithFastfood = task->size()[0];
+                mWithDistSvd = task->size()[1];
+                static int first = 0;
+                if (!first++) {
+                    char name[MAXHOSTNAMELEN];
+                    size_t namelen = MAXHOSTNAMELEN;
+                    pid_t pid = getpid();
+                    
+                    if (gethostname(name, namelen) != -1) {
+                        cout << endl << "Remote >> mId:" << mId << " Map to machine:" << name << "  Pid=" << pid;
+                    }
+                }
+                
                 break;
             }
                 
@@ -97,28 +102,34 @@ void Slave::initialWork(MatrixXd input, int target) {
     
     dataVec.push_back(input);
     
+    MatrixXd result;
     // Fastfood random projection
-    Fastfood ff(input.cols(), target);
-    MatrixXd result = ff.multiply(input);
-
-    // General random Gaussian projection
-    /*
-    srand (time(NULL));
-    random_device rd;
-    default_random_engine generator(rd());
-    normal_distribution<double> normal_distri(0, 1);
-    
-    MatrixXd gausssian(input.cols(), target);
-    
-    for (int i=0; i<gausssian.rows(); i++) {
-        for(int j=0; j<gausssian.cols(); j++) {
-            gausssian(i, j) = normal_distri(generator);
-        }
+    if (mWithFastfood) {
+        Fastfood ff(input.cols(), target);
+        result = ff.multiply(input);
     }
+    // General random Gaussian projection
+    else {
+        srand (time(NULL));
+        random_device rd;
+        default_random_engine generator(rd());
+        normal_distribution<double> normal_distri(0, 1);
     
-    MatrixXd result = input * gausssian;
-    */
+        MatrixXd gausssian(input.cols(), target);
+    
+        for (int i=0; i<gausssian.rows(); i++) {
+            for(int j=0; j<gausssian.cols(); j++) {
+                gausssian(i, j) = normal_distri(generator);
+            }
+        }
+        result = input * gausssian;
+    }
 
+    
+    if (mWithDistSvd) {
+        result = edoSketching(result.transpose(), target);
+        result = result.transpose();
+    }
     
     cout << endl << "Remote >> mId:" << mId << " InitialWork Sending result back";
     if (DBG) cout << endl << "RESULT:" << endl << result << endl;
@@ -275,8 +286,12 @@ MatrixXd Slave::Global_sum(MatrixXd myData, int my_rank, int nProc, MPI_Comm com
         // sender
         else if (my_rank >= nProc) {
             partner = my_rank - nProc;
+            
+            MPI_Comm comm = MPI_COMM_WORLD;
+            if (partner == MASTER_ID) comm = mComm;
+            
             cout << endl << "Remote >> mId:" << my_rank << "1st Global_sum Sending "<<partner << endl;
-            MPI_Send(sum.data(), sum.size(), MPI_DOUBLE, partner, Task::TREESUM_TAG, MPI_COMM_WORLD);
+            MPI_Send(sum.data(), sum.size(), MPI_DOUBLE, partner, Task::TREESUM_TAG, comm);
             done = 1;
         }
         

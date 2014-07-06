@@ -34,6 +34,10 @@
 #include "Task.h"
 #endif
 
+#ifndef DistriSpectral_Misc_h
+#include "Misc.h"
+#endif
+
 using namespace Eigen;
 using namespace std;
 
@@ -59,7 +63,7 @@ int main( int argc, char *argv[] ) {
     if(myid==0) {
         
         MPI_Group_rank (orig_group, &new_rank);
-        cout << endl << "MASTER: newRank:" <<new_rank;
+        //cout << endl << "MASTER: newRank:" <<new_rank;
         
         // Default settings
         int nDimension = 10;
@@ -67,6 +71,9 @@ int main( int argc, char *argv[] ) {
         int nDataPerCluster = 1000;
         double noise = 1; //variance
         double unitRadius =10;
+        
+        int enableFF = 1;
+        int enableDistSvd = 0;
         
         string strDefault;
         cout << endl << "Use default settings? [y/n] (default y):";
@@ -76,15 +83,18 @@ int main( int argc, char *argv[] ) {
         if (!strDefault.compare("n")) {
             cout << endl << "Dimension:";
             cin >> nDimension;
-            cout << endl << "Number of clusters:";
+            cout << "Number of clusters:";
             cin >> nCluster;
-            cout << endl << "Number of data per cluster:";
+            cout << "Number of data per cluster:";
             cin >> nDataPerCluster;
+            cout << "Enable Fastfood? [1/0] (default 1):";
+            cin >> enableFF;
+            cout << "Enable Distributed SVD? [1/0] (default 0):";
+            cin >> enableDistSvd;
         }
         
-        
         // It's master node
-        Master master(numprocs, new_comm);
+        Master master(numprocs, enableFF, enableDistSvd, new_comm);
 
         // The thread that sends task to slaves
         std::thread sender(&Master::sender, &master);
@@ -122,20 +132,19 @@ int main( int argc, char *argv[] ) {
         sender.join();
         receiver.join();
 
-
         float average=0;
         for (int i=0; i<timeHistory.size(); i++) {
-            cout << endl << "Trail " << i << "\tTime:\t" << timeHistory.at(i);
+            cout << endl << "Trial " << i << "\tTime:\t" << timeHistory.at(i);
             average += timeHistory.at(i);
         }
         
-        cout << endl << "Average :\t" << average/timeHistory.size();
+        cout << endl << "Average :\t" << average/timeHistory.size() << endl;
     
     }
     else {
         
         MPI_Group_rank (orig_group, &new_rank);
-        cout << endl << "SLAVE: id:"<< myid <<" newRank:" <<new_rank;
+        //cout << endl << "SLAVE: id:"<< myid <<" newRank:" <<new_rank;
         
         // It's slave node
         Slave slave(myid, numprocs, new_comm);

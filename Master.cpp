@@ -175,7 +175,11 @@ void Master::setCallback(int slave, Callback* callback) {
 void Master::reset() {
 
     mAvailSlave.clear();
-    Task task(Task::RESET);
+    
+    // Send enable Fastfood and enable distributed SVD through size column
+    long setting[] = {mWithFastfood, mWithDistSvd};
+    Task task(Task::RESET, setting);
+    
     for (int id=1; id<mNumProc; id++) {
         MPI_Send(&task, sizeof(task), MPI_BYTE, id, 0, MPI_COMM_WORLD);
              mAvailSlave.push(id);

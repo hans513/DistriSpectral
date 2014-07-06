@@ -117,3 +117,104 @@ pow2roundup (long x)
     x |= x >> 16;
     return x+1;
 }
+
+static Eigen::MatrixXd edoSketching(Eigen::MatrixXd A, int target) {
+    
+    MatrixXd B = MatrixXd::Zero(target, A.cols());
+    int maxEigen = target > A.cols()? target: A.cols();
+
+    // Indicator for the position in matrix B to insert next row
+    int zeroRowInd = 0;
+    
+    
+    //cout << " Bsize :" << B.rows()<< "  col:" << B.cols()<<endl;
+    //cout << " 1 " << endl;
+    
+    for (int i=0; i<A.rows(); i++) {
+        
+        //cout << " 2 " << zeroRowInd<< "  target:" << target << "  i:"<<i<<endl;
+        
+        B.row(zeroRowInd++) = A.row(i);
+        // cout << " 22 " << endl;
+        
+        if (zeroRowInd == target) {
+
+            const JacobiSVD<MatrixXd> svd(B , ComputeFullU|ComputeFullV);
+
+            
+            MatrixXd S = svd.singularValues();
+            
+            //cout << " 3 :" << S.cols() << endl;
+
+            // Prevent l/2 is larger than the number of eigenvalue
+            if (target/2 < maxEigen) {
+                double delta = pow(S(target/2),2);
+                //cout << " 4 " << endl;
+                S = S.array().square() - delta;
+                
+                // Array<double,Dynamic,Dynamic> lessInd = S.array() >= 0;
+                // S = S.array() * lessInd;
+                //cout << " 5 " << endl;
+                for (int i=0; i<S.cols(); i++) {
+                    if (S(i) < 0) S(i) = 0;
+                }
+                
+                S = S.array().pow(0.5);
+            } else {
+                cout << "Warning: Matrix_Sketching  natually eliminate" << endl;
+            }
+            
+
+
+            MatrixXd extendS(B.rows(),B.cols());
+            MatrixXd SMatrix = S.asDiagonal();
+            
+            //cout << " 55  S:"<< SMatrix.rows() << "  " <<  SMatrix.cols() << endl;
+            
+            extendS << SMatrix , MatrixXd::Zero(B.rows()-B.cols(), B.cols());
+            
+            //cout << " 6  S:"<< extendS.rows() << "  V:" <<  svd.matrixV().rows() << " " << svd.matrixV().cols() << endl;
+            
+            B = extendS * svd.matrixV().transpose();
+            zeroRowInd = target/2;
+
+        }
+        
+    }
+
+    return B;
+}
+
+static void testEdoSketching() {
+    
+    MatrixXd basisRank50 = MatrixXd::Random(50, 50);
+    for (int i=0; i<50; i++) {
+        basisRank50.row(i) = basisRank50.row(i)/basisRank50.row(i).norm();
+    }
+
+    MatrixXd basisRank5 = basisRank50.middleRows(0, 5);
+    MatrixXd basisRank10 = basisRank50.middleRows(0, 10);
+
+    // 10 * 100  rank=5
+    MatrixXd stackBasisRank5(10, 50);
+    stackBasisRank5 << basisRank5, basisRank5;
+    MatrixXd rank5_1e2 = stackBasisRank5 * MatrixXd::Random(stackBasisRank5.cols(), 100);
+    // 20 * 1000  rank=10
+
+    MatrixXd stackBasisRank10(20,50);
+    stackBasisRank10 << basisRank10, basisRank10;
+    MatrixXd rank10_1e3 = stackBasisRank10 * MatrixXd::Random(stackBasisRank10.cols(), 100);
+
+    MatrixXd B1 = edoSketching(rank5_1e2.transpose(), 12);
+    MatrixXd B2 = edoSketching(rank10_1e3.transpose(), 30);
+
+    MatrixXd diff1 = rank5_1e2 *rank5_1e2.transpose() - B1.transpose()*B1;
+    MatrixXd diff2 = rank10_1e3*rank10_1e3.transpose() - B2.transpose()*B2;
+    
+    double Error1 = diff1.array().abs().sum();
+    double Error2 = diff2.array().abs().sum();
+    
+    cout << "Error1:" << endl << Error1 << endl;
+    cout << "Error2:" << endl << Error2 << endl;
+  
+}
