@@ -29,4 +29,4 @@ remoteRun:
 
 remoteChrun:
 	cp eigenMpich ~/mpi_shared/
-	$(CHEXE) --host ubuntu1,ubuntu2 -n 3 mpi_shared/eigenMpi
+	$(CHEXE) --host ubuntu1,ubuntu2 -n 3 mpi_shared/eigenMpich
