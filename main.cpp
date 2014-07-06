@@ -100,11 +100,11 @@ int main( int argc, char *argv[] ) {
         std::thread sender(&Master::sender, &master);
         
         // The thread thst receives result from slave
-        std::thread receiver(&Master::receiver, &master);
+        // std::thread receiver(&Master::receiver, &master);
         
         DataSettings para(nDimension, nCluster, nDataPerCluster, pow(noise,0.5), unitRadius);
         
-        int nRepeat = 1;
+        int nRepeat = 50;
         
         vector<int64> timeHistory;
         
@@ -129,8 +129,10 @@ int main( int argc, char *argv[] ) {
         }
       
         master.terminate();
+         cout << endl << "BEFORE JOIN" << endl;
         sender.join();
-        receiver.join();
+        cout << endl << "AFTER JOIN" << endl;
+        //receiver.join();
 
         float average=0;
         for (int i=0; i<timeHistory.size(); i++) {

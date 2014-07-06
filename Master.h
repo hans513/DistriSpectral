@@ -86,6 +86,10 @@ private:
     int mWithFastfood;
     int mWithDistSvd;
     
+
+    bool isWaitingCallback();
+    void waitingCallback();
+    
     // For debug
     void printCallback () {
         if (!DBG_CALLBACK) return;

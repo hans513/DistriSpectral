@@ -25,6 +25,10 @@ void Master::sender() {
         
         cout << endl <<"Master SENDER ==>> pop next task" << endl;
         
+        if (mTaskQueue.size() == 0) {
+            waitingCallback();
+        }
+        
         // May Block here: get next task to assign
         TaskParcel current = mTaskQueue.pop();
         cout << endl << "Master SENDER ==>> After pop task";
@@ -87,6 +91,60 @@ void Master::sender() {
     }
 
     cout << endl <<"Master SENDER ==>> EXIT";
+    
+}
+
+bool Master::isWaitingCallback() {
+    
+    for (int i=0; i<mCallbackVec.size(); i++) {
+        if (mCallbackVec.at(i)!=NULL) return true;
+    }
+    
+    return false;
+}
+
+void Master::waitingCallback() {
+    
+    int dataSize;
+    MPI_Status status;
+    
+    while (isWaitingCallback()) {
+        
+        cout << endl <<"Master RECEIVER <<== wait to receive next msg" << endl;
+        
+        // May Block here
+        MPI_Probe(MPI_ANY_SOURCE, Task::RETURN_TAG, mComm, &status);
+        
+        
+        MPI_Get_count(&status, MPI_DOUBLE, &dataSize);
+        cout << endl <<"Master RECEIVER <<== about to receive dataSize:"<< dataSize << endl;
+        vector<double> buffer(dataSize);
+        MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, status.MPI_SOURCE, status.MPI_TAG, mComm, &status);
+        if (mExit) break;
+        
+        cout << endl <<"Master RECEIVER <<== receive from slave " << status.MPI_SOURCE;
+        
+        printCallback();
+        
+        {
+            std::unique_lock<std::mutex> lock(mCallback_mutex);
+            // Callback function knows how to handle data
+            if (mCallbackVec.at(status.MPI_SOURCE) != NULL) {
+                cout << endl << "Master RECEIVER <<== Calling callback slave:"  << status.MPI_SOURCE;
+                mCallbackVec.at(status.MPI_SOURCE)->notify(&buffer[0]);
+                mCallbackVec.at(status.MPI_SOURCE) = NULL;
+            }
+            else cout << endl << "Master RECEIVER <<== No callback";
+        }
+        
+        printCallback ();
+        
+        // Put the slave back to available pool
+        if (DBG) cout << endl << "Master RECEIVER <<== Before push slave back";
+        mAvailSlave.push(status.MPI_SOURCE);
+        if (DBG) cout << endl << "Master RECEIVER <<== After push slave back";
+        
+    }
     
 }
 
@@ -161,10 +219,11 @@ void Master::terminate() {
     mTaskQueue.push(tp);
     
     // Send fake message to RECEIVER for termination
+    /*
     MatrixXd nullMatrix(1,1);
     nullMatrix << 0;
     MPI_Send(nullMatrix.data(), nullMatrix.size(), MPI_DOUBLE, 0, Task::RETURN_TAG, mComm);
-    
+    */
 }
 
 void Master::setCallback(int slave, Callback* callback) {

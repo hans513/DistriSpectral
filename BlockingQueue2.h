@@ -45,4 +45,8 @@ public:
         std::unique_lock<std::mutex> lock(this->d_mutex);
         d_queue.clear();
     }
+    
+    int size() {
+        return d_queue.size();
+    }
 };
