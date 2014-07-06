@@ -15,6 +15,11 @@
 
 #endif /* defined(__DistriSpectral__Task__) */
 
+
+#ifndef DistriSpectral_Misc_h
+#include "Misc.h"
+#endif
+
 using namespace std;
 
 class Logic;
@@ -49,15 +54,18 @@ public:
     
     Eigen::MatrixXd result() {return mResult;}
     void setTargetResult(int target) {mTargetResult = target;}
+
     
-private:
-    
+protected:
     // Pointer to main logic class
     Logic* mLogic;
     
     // The dimension of the result matrix
     long mSize[2];
     
+    // Function pointer for the callback function
+    void (Logic::*mCb) (void);
+
     Eigen::MatrixXd mResult;
     
     // Number of result we are supposed to receive
@@ -66,7 +74,45 @@ private:
     // Number of result we received
     int mCurrentResult;
     
-    void (Logic::*mCb) (void);
+
+    Callback (Logic* logic, void (Logic::*cb) (void)): mLogic(logic), mCb(cb) {
+    }
+};
+
+class EdoLibertyCallback : public Callback {
+    
+public:
+    
+    EdoLibertyCallback (long size[2], int target, Logic* logic, void (Logic::*cb) (void)): Callback (logic, cb) {
+            
+        if (size!=NULL) {
+            memcpy( mSize, size, sizeof(mSize));
+            mResult = Eigen::MatrixXd::Zero(mSize[0], 2*mSize[1]);
+        }
+
+        mTargetResult = target;
+        mCurrentResult = 0;
+    }
+
+    void notify(void* data) {
+  
+        Eigen::MatrixXd matrix = Eigen::Map<Eigen::MatrixXd>((double*)data, mSize[0], mSize[1]);
+        cout << endl <<"Edo Callback function " << mCurrentResult+1  << "/"  << mTargetResult<< endl;
+
+        if (mResult.sum()==0) {
+            mResult.middleCols(0, mSize[1]) = matrix;
+        } else {
+            mResult.middleCols(mSize[1], mSize[1]) = matrix;
+            mResult = Shrinking(mResult.transpose(), mSize[1]);
+            mResult.transposeInPlace();
+        }
+
+        if (++mCurrentResult == mTargetResult) {
+            (mLogic->*mCb)();
+        }
+
+        cout << endl <<"Finish Callback";
+    }
 };
 
 

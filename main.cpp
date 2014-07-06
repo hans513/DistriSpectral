@@ -72,8 +72,8 @@ int main( int argc, char *argv[] ) {
         double noise = 1; //variance
         double unitRadius =10;
         
-        int enableFF = 1;
-        int enableDistSvd = 0;
+        int enableFF = 0;
+        int enableDistSvd = 1;
         
         string strDefault;
         cout << endl << "Use default settings? [y/n] (default y):";
@@ -87,9 +87,9 @@ int main( int argc, char *argv[] ) {
             cin >> nCluster;
             cout << "Number of data per cluster:";
             cin >> nDataPerCluster;
-            cout << "Enable Fastfood? [1/0] (default 1):";
+            cout << "Enable Fastfood? [1/0] (default " << enableFF <<"):";
             cin >> enableFF;
-            cout << "Enable Distributed SVD? [1/0] (default 0):";
+            cout << "Enable Distributed SVD? [1/0] (default " << enableDistSvd<< "):";
             cin >> enableDistSvd;
         }
         

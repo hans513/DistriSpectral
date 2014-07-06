@@ -71,7 +71,7 @@ void Logic::start(MatrixXd X, int K, double noise) {
 MatrixXd Logic::initialize(MatrixXd X, int nTarget) {
 
     // TODO: how to decide number of chunk??
-    int nChunk = mDispatcher->nProc();
+    int nChunk = mDispatcher->nProc()-1;
     int nDimension = X.rows();
     
     int blk = X.cols() / nChunk;
@@ -79,9 +79,16 @@ MatrixXd Logic::initialize(MatrixXd X, int nTarget) {
         mChunkVec.push_back(ChunkInfo(i*blk, (i+1)*blk));
     }
     mChunkVec.push_back(ChunkInfo((nChunk-1)*blk, X.cols()));
-
+    
+    
     IndexType retSize[2] = {nDimension, nTarget};
-    Callback* callback = new Callback(retSize, nChunk, this, &Logic::initialize_cb);
+    
+    
+    Callback* callback;
+    
+    if (mDispatcher->withDistSvd()) callback = new EdoLibertyCallback(retSize, nChunk, this, &Logic::initialize_cb);
+    else callback = new Callback(retSize, nChunk, this, &Logic::initialize_cb);
+    
     changeWaitState(STATE_WAIT);
     
     for (int i=0; i<nChunk; i++) {

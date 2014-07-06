@@ -63,6 +63,9 @@ public:
         return mNumProc;
     }
     
+    int withFastfood() {return mWithFastfood;}
+    int withDistSvd() {return mWithDistSvd;}
+    
 private:
 
     int mNumProc;

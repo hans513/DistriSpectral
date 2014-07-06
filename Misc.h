@@ -118,6 +118,33 @@ pow2roundup (long x)
     return x+1;
 }
 
+static Eigen::MatrixXd Shrinking(Eigen::MatrixXd B, int target) {
+
+    const JacobiSVD<MatrixXd> svd(B , ComputeFullU|ComputeFullV);
+    MatrixXd S = svd.singularValues();
+    
+    // (l/2)th eigenvalue will be the pivot.
+    // We need to prevent l/2 is larger than the number of eigenvalue
+
+    if (target/2 < S.size()) {
+        double delta = pow(S(target/2),2);
+        S = S.array().square() - delta;
+        for (int i=0; i<S.size(); i++)  if (S(i)<0) S(i) = 0;
+        S = S.array().pow(0.5);
+    } else {
+        cout << "Warning: Matrix_Sketching  natually eliminate" << endl;
+    }
+
+    MatrixXd extendS(B.rows(),B.cols());
+    MatrixXd SMatrix = S.asDiagonal();
+    
+    extendS << SMatrix , MatrixXd::Zero(B.rows()-B.cols(), B.cols());
+    
+    B = extendS * svd.matrixV().transpose();
+
+    return B;
+}
+
 static Eigen::MatrixXd edoSketching(Eigen::MatrixXd A, int target) {
     
     MatrixXd B = MatrixXd::Zero(target, A.cols());
@@ -138,46 +165,8 @@ static Eigen::MatrixXd edoSketching(Eigen::MatrixXd A, int target) {
         // cout << " 22 " << endl;
         
         if (zeroRowInd == target) {
-
-            const JacobiSVD<MatrixXd> svd(B , ComputeFullU|ComputeFullV);
-
-            
-            MatrixXd S = svd.singularValues();
-            
-            //cout << " 3 :" << S.cols() << endl;
-
-            // Prevent l/2 is larger than the number of eigenvalue
-            if (target/2 < maxEigen) {
-                double delta = pow(S(target/2),2);
-                //cout << " 4 " << endl;
-                S = S.array().square() - delta;
-                
-                // Array<double,Dynamic,Dynamic> lessInd = S.array() >= 0;
-                // S = S.array() * lessInd;
-                //cout << " 5 " << endl;
-                for (int i=0; i<S.cols(); i++) {
-                    if (S(i) < 0) S(i) = 0;
-                }
-                
-                S = S.array().pow(0.5);
-            } else {
-                cout << "Warning: Matrix_Sketching  natually eliminate" << endl;
-            }
-            
-
-
-            MatrixXd extendS(B.rows(),B.cols());
-            MatrixXd SMatrix = S.asDiagonal();
-            
-            //cout << " 55  S:"<< SMatrix.rows() << "  " <<  SMatrix.cols() << endl;
-            
-            extendS << SMatrix , MatrixXd::Zero(B.rows()-B.cols(), B.cols());
-            
-            //cout << " 6  S:"<< extendS.rows() << "  V:" <<  svd.matrixV().rows() << " " << svd.matrixV().cols() << endl;
-            
-            B = extendS * svd.matrixV().transpose();
+            B = Shrinking(B, target);
             zeroRowInd = target/2;
-
         }
         
     }

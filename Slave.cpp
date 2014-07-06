@@ -103,8 +103,14 @@ void Slave::initialWork(MatrixXd input, int target) {
     dataVec.push_back(input);
     
     MatrixXd result;
+    
+    // Edo Liberty distributed svd
+    if (mWithDistSvd) {
+        result = edoSketching(input.transpose(), target);
+        result.transposeInPlace();
+    }
     // Fastfood random projection
-    if (mWithFastfood) {
+    else if (mWithFastfood) {
         Fastfood ff(input.cols(), target);
         result = ff.multiply(input);
     }
@@ -124,17 +130,10 @@ void Slave::initialWork(MatrixXd input, int target) {
         }
         result = input * gausssian;
     }
-
-    
-    if (mWithDistSvd) {
-        result = edoSketching(result.transpose(), target);
-        result = result.transpose();
-    }
     
     cout << endl << "Remote >> mId:" << mId << " InitialWork Sending result back";
     if (DBG) cout << endl << "RESULT:" << endl << result << endl;
     MPI_Send(result.data(), result.size(), MPI_DOUBLE, MASTER_ID, Task::RETURN_TAG, mComm);
-
 }
 
 
