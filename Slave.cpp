@@ -106,7 +106,7 @@ void Slave::initialWork(MatrixXd input, int target) {
     
     // Edo Liberty distributed svd
     if (mWithDistSvd) {
-        result = edoSketching(input.transpose(), target);
+        result = edoSketching(input.transpose(), target, mMsgHeader);
         result.transposeInPlace();
     }
     // Fastfood random projection

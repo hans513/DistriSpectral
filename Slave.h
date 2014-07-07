@@ -50,7 +50,10 @@ public:
     static const int DBG = 0;
     
     Slave(int id, int nProc, MPI_Comm newComm):
-        mId(id), mTotalProc(nProc),mComm(newComm) {}
+        mId(id), mTotalProc(nProc),mComm(newComm) {
+    
+        sprintf(mMsgHeader,"Remote >> mId: %d", mId);
+    }
     
     void run();
     
@@ -76,4 +79,6 @@ private:
     // Settings
     int mWithFastfood;
     int mWithDistSvd;
+    
+    char mMsgHeader[64];
 };

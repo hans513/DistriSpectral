@@ -16,7 +16,7 @@
 #include <ctime>
 #endif
 
-
+#include <math.h>
 #include <Eigen/KroneckerProduct>
 
 #endif
@@ -145,7 +145,7 @@ static Eigen::MatrixXd Shrinking(Eigen::MatrixXd B, int target) {
     return B;
 }
 
-static Eigen::MatrixXd edoSketching(Eigen::MatrixXd A, int target) {
+static Eigen::MatrixXd edoSketching(Eigen::MatrixXd A, int target, string msg="") {
     
     MatrixXd B = MatrixXd::Zero(target, A.cols());
     int maxEigen = target > A.cols()? target: A.cols();
@@ -154,15 +154,18 @@ static Eigen::MatrixXd edoSketching(Eigen::MatrixXd A, int target) {
     int zeroRowInd = 0;
     
     
-    //cout << " Bsize :" << B.rows()<< "  col:" << B.cols()<<endl;
-    //cout << " 1 " << endl;
-    
     for (int i=0; i<A.rows(); i++) {
-        
-        //cout << " 2 " << zeroRowInd<< "  target:" << target << "  i:"<<i<<endl;
-        
+    
+        // Progress report
+        if (A.rows() > 5000)  {
+            static int tick = A.rows()/50;
+            if (i % tick == 0) {
+                int percent = round(i*100/A.rows());
+                cout << msg << " edoSketching progress" << percent << "%" << endl;
+            }
+        }
+            
         B.row(zeroRowInd++) = A.row(i);
-        // cout << " 22 " << endl;
         
         if (zeroRowInd == target) {
             B = Shrinking(B, target);
