@@ -25,6 +25,17 @@ private:
     
 public:
     
+    void push(vector<T> vec) {
+        {
+            std::unique_lock<std::mutex> lock(this->d_mutex);
+            for (int i=0; i<vec.size(); i++) {
+                d_queue.push_front(vec.at(i));
+            }
+        }
+        this->d_condition.notify_one();
+        
+    }
+    
     void push(T const& value) {
         {
             std::unique_lock<std::mutex> lock(this->d_mutex);

@@ -56,6 +56,7 @@ public:
     void sender();
     void terminate();
     void submit(TaskParcel parcel);
+    void submit(vector<TaskParcel> vec);
     
     void reset();
     

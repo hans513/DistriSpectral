@@ -91,14 +91,15 @@ MatrixXd Logic::initialize(MatrixXd X, int nTarget) {
     
     changeWaitState(STATE_WAIT);
     
+    vector<TaskParcel> vec;
     for (int i=0; i<nChunk; i++) {
         IndexType nCol = mChunkVec.at(i).end() - mChunkVec.at(i).start();
         IndexType size[2] = {nDimension, nCol};
         Task task(Task::INITIAL, size, nTarget, ++serialNum);
         TaskParcel tp(task, X.middleCols(mChunkVec.at(i).start(), nCol), callback);
-        mDispatcher->submit(tp);
+        vec.push_back(tp);
     }
-    
+    mDispatcher->submit(vec);
     
     cout << endl << "[LOGIC] : STATE_1  START TO WAIT";
     {

@@ -202,6 +202,10 @@ void Master::submit(TaskParcel parcel) {
     mTaskQueue.push(parcel);
 }
 
+void Master::submit(vector<TaskParcel> vec) {
+    mTaskQueue.push(vec);
+}
+
 
 void Master::terminate() {
     
