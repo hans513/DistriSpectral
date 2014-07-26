@@ -66,8 +66,8 @@ int main( int argc, char *argv[] ) {
         //cout << endl << "MASTER: newRank:" <<new_rank;
         
         // Default settings
-        int nDimension = 10;
-        int nCluster = 5;
+        int nDimension = 50;
+        int nCluster = 10;
         int nDataPerCluster = 1000;
         double noise = 1; //variance
         double unitRadius =10;
@@ -104,7 +104,7 @@ int main( int argc, char *argv[] ) {
         
         DataSettings para(nDimension, nCluster, nDataPerCluster, pow(noise,0.5), unitRadius);
         
-        int nRepeat = 50;
+        int nRepeat = 1;
         
         vector<int64> timeHistory;
         

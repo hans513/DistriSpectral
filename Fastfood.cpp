@@ -143,14 +143,22 @@ MatrixXd Fastfood::multiply(MatrixXd input) {
         MatrixXi B = mB.at(i).asDiagonal();
         MatrixXd G = mG.at(i).asDiagonal();
         VectorXi pi = mPI.at(i);
-        MatrixXi PI = MatrixXi::Zero(mBlkLength,mBlkLength);
+        //MatrixXi PI = MatrixXi::Zero(mBlkLength,mBlkLength);
         MatrixXd H = hadamardGenerator(mBlkLength).cast<double>();
         
         // Permutation matrix
-        for (long j=0; j<pi.size(); j++) PI(j, pi(j)) = 1;
+        // for (long j=0; j<pi.size(); j++) PI(j, pi(j)) = 1;
         
         // The fastfood matrix
-        MatrixXd F =  H * G * PI.cast<double>() * H * B.cast<double>();
+        MatrixXd HB = H * B.cast<double>();
+        
+        // Permutation
+        MatrixXd PHB =  MatrixXd::Zero(mBlkLength,mBlkLength);
+        for (long j=0; j<pi.size(); j++) {
+            PHB.row(j) = HB.row(pi(j));
+        }
+        
+        MatrixXd F =  H * G * PHB;
         
         // Extract the correspondent block in the X
         MatrixXd inputBlock = input.middleCols(i * mBlkLength, mBlkLength);
@@ -182,14 +190,24 @@ MatrixXd Fastfood::multiply2(MatrixXd input) {
         MatrixXi B = mB.at(i).asDiagonal();
         MatrixXd G = mG.at(i).asDiagonal();
         VectorXi pi = mPI.at(i);
-        MatrixXi PI = MatrixXi::Zero(mBlkLength,mBlkLength);
+        //MatrixXi PI = MatrixXi::Zero(mBlkLength,mBlkLength);
         MatrixXd H = hadamardGenerator(mBlkLength).cast<double>();
         
-        // Permutation matrix
-        for (long j=0; j<pi.size(); j++) PI(j, pi(j)) = 1;
+        // Permutation
+        // for (long j=0; j<pi.size(); j++) PI(j, pi(j)) = 1;
+        
+        MatrixXd HB = H * B.cast<double>();
+        
+        // Permutation
+        MatrixXd PHB =  MatrixXd::Zero(mBlkLength,mBlkLength);
+        for (long j=0; j<pi.size(); j++) {
+            PHB.row(j) = HB.row(pi(j));
+        }
+        
+        MatrixXd F =  H * G * PHB;
         
         // The fastfood matrix
-        MatrixXd F =  H * G * PI.cast<double>() * H * B.cast<double>();
+        //MatrixXd F =  H * G * PI.cast<double>() * H * B.cast<double>();
         cout << endl << "ff F:" << F << endl;
         realF.middleRows(i * mBlkLength, mBlkLength) = F;
     }
