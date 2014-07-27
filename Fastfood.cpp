@@ -8,7 +8,10 @@
 
 
 #include "Fastfood.h"
-//#include "spiral_wht.h"
+
+#ifndef __DistriSpectral__Hadamard__
+#include "hadamardc.h"
+#endif
 
 using namespace std;
 using namespace Eigen;
@@ -138,19 +141,15 @@ void Fastfood::initialize() {
 MatrixXd Fastfood::multiply(MatrixXd input) {
     
     MatrixXd Ret = MatrixXd::Zero(input.rows(), mRealCols);
-   
+    
     for (long i=0; i<mNumBlk; i++) {
-        MatrixXi B = mB.at(i).asDiagonal();
+        MatrixXd B = mB.at(i).cast<double>().asDiagonal();
         MatrixXd G = mG.at(i).asDiagonal();
         VectorXi pi = mPI.at(i);
-        //MatrixXi PI = MatrixXi::Zero(mBlkLength,mBlkLength);
-        MatrixXd H = hadamardGenerator(mBlkLength).cast<double>();
         
-        // Permutation matrix
-        // for (long j=0; j<pi.size(); j++) PI(j, pi(j)) = 1;
-        
-        // The fastfood matrix
-        MatrixXd HB = H * B.cast<double>();
+        vector<double> buffer(B.rows()*B.cols());
+        hadamard_apply_matrix(&buffer[0], B.data(), B.rows(), B.cols());
+        MatrixXd HB = Map<MatrixXd>(&buffer[0], B.rows(), B.cols());
         
         // Permutation
         MatrixXd PHB =  MatrixXd::Zero(mBlkLength,mBlkLength);
@@ -158,7 +157,9 @@ MatrixXd Fastfood::multiply(MatrixXd input) {
             PHB.row(j) = HB.row(pi(j));
         }
         
-        MatrixXd F =  H * G * PHB;
+        MatrixXd GPHB = G * PHB;
+        hadamard_apply_matrix(&buffer[0], GPHB.data(), GPHB.rows(), GPHB.cols());
+        MatrixXd F = Map<MatrixXd>(&buffer[0], GPHB.rows(), GPHB.cols());
         
         // Extract the correspondent block in the X
         MatrixXd inputBlock = input.middleCols(i * mBlkLength, mBlkLength);
@@ -172,7 +173,6 @@ MatrixXd Fastfood::multiply(MatrixXd input) {
         Ret += inputBlock* mResidual;
     }
     
-    //output = Ret;
     return Ret;
 }
 
