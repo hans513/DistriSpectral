@@ -15,7 +15,6 @@
 
 #endif /* defined(__DistriSpectral__Logic__) */
 
-
 #ifndef __DistriSpectral__Master__
 #include "Master.h"
 #endif 
@@ -37,6 +36,7 @@
 #endif
 
 typedef long IndexType;
+typedef double DataType;
 
 class Logic {
     
@@ -45,6 +45,9 @@ public:
     static const bool DBG = true;
     static const bool PRINT_MATRIX = false;
     static const bool TIME_MEASURE = true;
+    
+//    static const int MAX_CHUNK = 240 * 1000 * 1000;
+    static const int MAX_CHUNK = 60 * 1000 * 1000; //60M
     
     // State for mWait
     static const int STATE_ACTIVE = 0;
@@ -62,6 +65,7 @@ public:
     Eigen::MatrixXd centers() {return mCenters;};
 
     void finish();
+    std::string getTimeDetail();
     
 private:
 
@@ -78,6 +82,12 @@ private:
     // hold lock and change mWait
     void changeWaitState(int state);
     
+    // return the number of chunks we should split
+    int decideChunks(MatrixXd X);
+    
+    // 
+    IndexType decideP(int K, int dimension);
+    
     // The info of the split matrices
     vector<ChunkInfo> mChunkVec;
 
@@ -89,6 +99,8 @@ private:
     int mWait;
 
     Eigen::MatrixXd mCenters;
+    
+    std::vector<int64> mTime;
 
     // Temporary data (Should be removed in the future)
     //DataGenerator* mData;

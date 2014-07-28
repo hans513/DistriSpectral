@@ -48,6 +48,7 @@ public:
     
     static const int MASTER_ID = 0;
     static const int DBG = 0;
+    static const int DBG_GLOBAL_SUM = 0;
     
     Slave(int id, int nProc, MPI_Comm newComm):
         mId(id), mTotalProc(nProc),mComm(newComm) {

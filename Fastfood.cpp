@@ -100,7 +100,6 @@ void Fastfood::initialize() {
         VectorXi b(mBlkLength,1);
         VectorXd g(mBlkLength,1);
         VectorXi pi(mBlkLength,1);
-        
 
         for (long j=0; j<mBlkLength; j++) pi(j)= (int)j;
         

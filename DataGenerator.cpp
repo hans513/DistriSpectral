@@ -101,7 +101,7 @@ double DataGenerator::evaluate(MatrixXd estimate) {
     //cout << bestMatch << endl;
     //cout << " ===== Original ===== " << endl;
     //cout << mCenters << endl;
-    cout << endl << "Avg RMSE=" << error/  mPara.cluster() << endl;
+    // cout << endl << "Avg RMSE=" << error/  mPara.cluster() << endl;
     
     return (error/  mPara.cluster());
 }

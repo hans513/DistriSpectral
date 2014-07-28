@@ -104,11 +104,8 @@ static D3Matrix<Derived> outer(const MatrixBase<Derived> &A, MatrixBase<Derived>
     
 }
 
-static inline long
-pow2roundup (long x)
-{
-    if (x < 0)
-        return 0;
+static inline long pow2roundup (long x) {
+    if (x < 0) return 0;
     --x;
     x |= x >> 1;
     x |= x >> 2;
@@ -152,7 +149,6 @@ static Eigen::MatrixXd edoSketching(Eigen::MatrixXd A, int target, string msg=""
 
     // Indicator for the position in matrix B to insert next row
     int zeroRowInd = 0;
-    
     
     for (int i=0; i<A.rows(); i++) {
     

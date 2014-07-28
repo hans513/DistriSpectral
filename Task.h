@@ -15,7 +15,6 @@
 
 #endif /* defined(__DistriSpectral__Task__) */
 
-
 #ifndef DistriSpectral_Misc_h
 #include "Misc.h"
 #endif
@@ -24,36 +23,43 @@ using namespace std;
 
 class Logic;
 
+
 class Callback {
     
+    
 public:
-    Callback (long size[2], int target, Logic* logic, void (Logic::*cb) (void)): mLogic(logic), mCb(cb) {
+    
+    /**
+     input parameter:
+        size:   Dimension of result matrix
+        target: Number of result this callback are supposed to handle
+        Logic:
+        cb:     Callback function
+     */
+    Callback (long size[2], int nHandle, Logic* logic, void (Logic::*cb) (void))
+        : mLogic(logic), mCb(cb), mTargetHandled(nHandle) {
         if (size!=NULL) {
             memcpy( mSize, size, sizeof(mSize));
             mResult = Eigen::MatrixXd::Zero(mSize[0], mSize[1]);
         }
-        mTargetResult = target;
-        mCurrentResult = 0;
     }
     
     virtual void notify(void* data) {
         
-        Eigen::MatrixXd matrix = Eigen::Map<Eigen::MatrixXd>((double*)data, mSize[0], mSize[1]);
+        Eigen::MatrixXd matrix =
+                Eigen::Map<Eigen::MatrixXd>((double*)data, mSize[0], mSize[1]);
         
-        cout << endl <<"Callback function " << mCurrentResult+1  << "/"  << mTargetResult<< endl;
+        cout << endl <<"\tCallback function " << mCurrentHandled+1  << "/"  << mTargetHandled;
         
         mResult += matrix;
         
-        if (++mCurrentResult == mTargetResult) {
-            //mLogic->initialize_cb();
+        if (++mCurrentHandled == mTargetHandled) {
             (mLogic->*mCb)();
         }
-        
-        cout << endl <<"Finish Callback";
     }
     
     Eigen::MatrixXd result() {return mResult;}
-    void setTargetResult(int target) {mTargetResult = target;}
+    void setTargetResult(int target) {mTargetHandled = target;}
 
     
 protected:
@@ -69,35 +75,34 @@ protected:
     Eigen::MatrixXd mResult;
     
     // Number of result we are supposed to receive
-    int mTargetResult;
+    int mTargetHandled;
     
     // Number of result we received
-    int mCurrentResult;
+    int mCurrentHandled = 0;
     
 
-    Callback (Logic* logic, void (Logic::*cb) (void)): mLogic(logic), mCb(cb) {
-    }
+    Callback (int nHandle, Logic* logic, void (Logic::*cb) (void))
+            : mLogic(logic), mCb(cb), mTargetHandled(nHandle) {}
 };
 
 class EdoLibertyCallback : public Callback {
     
 public:
     
-    EdoLibertyCallback (long size[2], int target, Logic* logic, void (Logic::*cb) (void)): Callback (logic, cb) {
+    EdoLibertyCallback (long size[2], int nHandle, Logic* logic, void (Logic::*cb) (void))
+        : Callback (nHandle, logic, cb) {
             
         if (size!=NULL) {
             memcpy( mSize, size, sizeof(mSize));
             mResult = Eigen::MatrixXd::Zero(mSize[0], 2*mSize[1]);
         }
-
-        mTargetResult = target;
-        mCurrentResult = 0;
     }
 
     void notify(void* data) {
   
-        Eigen::MatrixXd matrix = Eigen::Map<Eigen::MatrixXd>((double*)data, mSize[0], mSize[1]);
-        cout << endl <<"Edo Callback function " << mCurrentResult+1  << "/"  << mTargetResult<< endl;
+        Eigen::MatrixXd matrix =
+                Eigen::Map<Eigen::MatrixXd>((double*)data, mSize[0], mSize[1]);
+        cout << endl <<"Edo Callback function " << mCurrentHandled+1  << "/"  << mTargetHandled<< endl;
 
         if (mResult.sum()==0) {
             mResult.middleCols(0, mSize[1]) = matrix;
@@ -107,11 +112,9 @@ public:
             mResult.transposeInPlace();
         }
 
-        if (++mCurrentResult == mTargetResult) {
+        if (++mCurrentHandled == mTargetHandled) {
             (mLogic->*mCb)();
         }
-
-        cout << endl <<"Finish Callback";
     }
 };
 
@@ -133,26 +136,18 @@ public:
     static const int RETURN_TAG = 9;
     static const int TREESUM_TAG = 9;
     
-    Task(int cmd, long size[2]=NULL, int info=0, int id=0): mCmd(cmd), mInfo(info), mId(id) {
+    Task(int cmd, long size[2]=NULL, int info=0, int id=0)
+            : mCmd(cmd), mInfo(info), mId(id) {
         if (size!=NULL) memcpy( mSize, size, sizeof(mSize));
     }
     
-    int cmd() {
-        return mCmd;
-    }
-    
-    long* size() {
-        return mSize;
-    }
-    
-    int info() {
-        return mInfo;
-    }
-    
-    int id() {
-        return mId;
-    }
+    // Get functions
+    int cmd()   {return mCmd;}
+    long* size() {return mSize;}
+    int info()  {return mInfo;}
+    int id()    {return mId;}
 
+    // For translating command id to command string
     static std::string cmdToString(int cmd) {
         switch (cmd) {
             case Task::INITIAL:
@@ -190,18 +185,19 @@ private:
 class TaskParcel {
   
 public:
-    TaskParcel(Task task, Eigen::MatrixXd data, Callback* callback): mTask(task){
+    TaskParcel(Task task, Eigen::MatrixXd data, Callback* callback)
+            : mTask(task){
         mData = data;
         mCallback = callback;
     };
     
     TaskParcel(Task task): mTask(task){};
 
+    // Get functions
     Task task()     {return mTask;}
     void* data()    {return mData.data();}
     int dataSize()  {return mData.size();}
     Callback* callback() {return mCallback;}
-    
     Eigen::MatrixXd matrix() {return mData;}
     
 private:
@@ -215,13 +211,13 @@ class ChunkInfo {
 
 public:
     ChunkInfo(int start, int end): mStart(start), mEnd(end){};
+
+    // Set functions
+    void assign(int slave) {mSlave = slave;}
     
-    void assign(int slave) {
-        mSlave = slave;
-    }
-    
+    // Get functions
     int start() { return mStart;}
-    int end() { return mEnd;}
+    int end()   { return mEnd;}
     int slave() { return mSlave;}
     
 private:

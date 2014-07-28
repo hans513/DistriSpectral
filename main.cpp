@@ -11,24 +11,24 @@
 /*Do not forget to include the MPI header file*/
 #include "mpi.h"
 
-#include <stdio.h>
+//#include <stdio.h>
 #include <iostream>
 #include <vector>
 #include <Eigen/Dense>
 #include <thread>
+#include <string>
 
 #ifndef __DistriSpectral__Logic__
 #include "Logic.h"
-#endif /* defined(__DistriSpectral__Logic__) */
-
+#endif 
 
 #ifndef __DistriSpectral__Slave__
 #include "Slave.h"
-#endif /* defined(__DistriSpectral__Slave__) */
+#endif
 
 #ifndef __DistriSpectral__Master__
 #include "Master.h"
-#endif /* defined(__DistriSpectral__Master__) */
+#endif
 
 #ifndef __DistriSpectral__Task__
 #include "Task.h"
@@ -69,17 +69,19 @@ int main( int argc, char *argv[] ) {
         int nDimension = 50;
         int nCluster = 10;
         int nDataPerCluster = 1000;
+        int nRepeat = 1;
+        
         double noise = 1; //variance
         double unitRadius =10;
         
-        int enableFF = 0;
-        int enableDistSvd = 1;
+        int enableFF = 1;
+        int enableDistSvd = 0;
         
         string strDefault;
         cout << endl << "Use default settings? [y/n] (default y):";
         getline(cin, strDefault);
         
-        // User want to input new Settings
+        // User defined Settings
         if (!strDefault.compare("n")) {
             cout << endl << "Dimension:";
             cin >> nDimension;
@@ -87,10 +89,23 @@ int main( int argc, char *argv[] ) {
             cin >> nCluster;
             cout << "Number of data per cluster:";
             cin >> nDataPerCluster;
+            
+            string userInput;
+            getline(cin, userInput);
+            
+            cout << "Number of repeat: (default no repeat)";
+            getline(cin, userInput);
+            if (userInput.size()!=0) nRepeat = stoi(userInput, nullptr);
+            
             cout << "Enable Fastfood? [1/0] (default " << enableFF <<"):";
-            cin >> enableFF;
-            cout << "Enable Distributed SVD? [1/0] (default " << enableDistSvd<< "):";
-            cin >> enableDistSvd;
+            getline(cin, userInput);
+            if (userInput.size()!=0) enableFF = stoi(userInput, nullptr);
+            
+            if (!enableFF) {
+                cout << "Enable Distributed SVD? [1/0] (default " << enableDistSvd<< "):";
+                getline(cin, userInput);
+                if (userInput.size()!=0) enableDistSvd = stoi(userInput, nullptr);
+            }
         }
         
         // It's master node
@@ -104,10 +119,10 @@ int main( int argc, char *argv[] ) {
         
         DataSettings para(nDimension, nCluster, nDataPerCluster, pow(noise,0.5), unitRadius);
         
-        int nRepeat = 1;
-        
         vector<int64> timeHistory;
+        vector<double> rmseHistory;
         
+        string timeDetail;
         for (int repInd =0; repInd<nRepeat; repInd++) {
         
             master.reset();
@@ -120,27 +135,30 @@ int main( int argc, char *argv[] ) {
             logic.start(data.X(), nCluster, noise);
             int64 t1 = GetTimeMs64();
             
-            cout << "[MAIN] : Total time=" << (t1-t0) << endl;
             timeHistory.push_back(t1-t0);
+            rmseHistory.push_back(data.evaluate(logic.centers()));
             
             if(DBG) cout << endl << "RESULT " << endl << logic.centers();
-            data.evaluate(logic.centers());
             
+            timeDetail = logic.getTimeDetail();
         }
       
         master.terminate();
-         cout << endl << "BEFORE JOIN" << endl;
         sender.join();
-        cout << endl << "AFTER JOIN" << endl;
         //receiver.join();
 
-        float average=0;
-        for (int i=0; i<timeHistory.size(); i++) {
-            cout << endl << "Trial " << i << "\tTime:\t" << timeHistory.at(i);
-            average += timeHistory.at(i);
-        }
+        // Print out the Time Measurement table
+        cout << timeDetail;
         
-        cout << endl << "Average :\t" << average/timeHistory.size() << endl;
+        // Print out the time and rmse of each trial
+        float average=0;
+        float avgRmse=0;
+        for (int i=0; i<timeHistory.size(); i++) {
+            cout << endl << "Trial " << i << "\tTime:\t" << timeHistory[i]<<"\t Rmse:" << rmseHistory[i];
+            average += timeHistory[i];
+            avgRmse += rmseHistory[i];
+        }
+        cout << endl << "Average :\t" << average/nRepeat <<"\t Rmse:"<<  avgRmse/nRepeat << endl;
     
     }
     else {

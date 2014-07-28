@@ -52,7 +52,7 @@ public:
     ~Master() { }
     
     void run();
-    void receiver();
+    void receiver(int runningWhenIdle);
     void sender();
     void terminate();
     void submit(TaskParcel parcel);
@@ -90,6 +90,7 @@ private:
 
     bool isWaitingCallback();
     void waitingCallback();
+    void receiveResult();
     
     // For debug
     void printCallback () {

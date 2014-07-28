@@ -21,28 +21,28 @@ void Slave::run() {
 
     while (!exit) {
 
-        cout << endl << "Remote >> mId:" << mId << " Wait for next task";
-        cout << endl;
+        if(DBG) cout << endl << "\tRemote >> mId:" << mId << " Wait for next task";
+        if(DBG) cout << endl;
         
         // Receive remote task here
         MPI_Recv(taskBuf, sizeof(Task), MPI_BYTE, MASTER_ID, 0, MPI_COMM_WORLD, &status);
         Task* task = (Task*) taskBuf;
         
-        cout << endl << "Remote >> mId:" << mId << " Got task:" <<task->cmd()<< "  [" <<task->id()<<"]";
+        cout << endl << "\tRemote >> mId:" << mId << " Got task:" <<Task::cmdToString(task->cmd())<< "  [" <<task->id()<<"]";
 
         
         // Decide what task to do
         switch (task->cmd()) {
             
             {case Task::TERMINATE:
-                cout << endl << "Remote >> mId:" << mId << " TERMINATE!"<< endl;
+                if (DBG) cout << endl << "\tRemote >> mId:" << mId << " TERMINATE!"<< endl;
                 exit=1;
                 break;
             }
              
             // Receiving the data matrix chunk
             {case Task::INITIAL:
-                cout << endl << "Remote >> mId:" << mId << " Task::INITIAL"<< "  [" <<task->id()<<"]" << endl;
+                if(DBG) cout << endl << "\tRemote >> mId:" << mId << " Task::INITIAL"<< "  [" <<task->id()<<"]" << endl;
                 MatrixXd matrix = receiveMatrixFrom(MASTER_ID, Task::DATA_TAG, task->size());
                 initialWork(matrix, task->info());
                 break;
@@ -51,7 +51,7 @@ void Slave::run() {
             // Receving the broadcast
             {case Task::BASIS_MUL:
              case Task::CAL_TENSOR:
-                cout << endl <<"Remote >> mId:" << mId << " Task::"<<  Task::cmdToString(task->cmd()) <<"  dataSize:"<< task->size()[0] << " * " << task->size()[1] << "  [" <<task->id()<<"]"<<endl;
+                if(DBG) cout << endl <<"\tRemote >> mId:" << mId << " Task::"<<  Task::cmdToString(task->cmd()) <<"  dataSize:"<< task->size()[0] << " * " << task->size()[1] << "  [" <<task->id()<<"]"<<endl;
                 long dataSize = task->size()[0] * task->size()[1];
                 vector<double> buffer(dataSize);
                 
@@ -76,7 +76,7 @@ void Slave::run() {
                     pid_t pid = getpid();
                     
                     if (gethostname(name, namelen) != -1) {
-                        cout << endl << "Remote >> mId:" << mId << " Map to machine:" << name << "  Pid=" << pid;
+                        cout << endl << "\tRemote >> mId:" << mId << " Map to machine:" << name << "  Pid=" << pid;
                     }
                 }
                 
@@ -88,7 +88,7 @@ void Slave::run() {
             }
         }
     
-        cout << endl << "Remote >> mId:" << mId << " Finish task" << "  [" <<task->id()<<"]"<<endl;
+        cout << endl << "\tRemote >> mId:" << mId << " Finish task" << "  [" <<task->id()<<"]"<<endl;
 
     }
 }
@@ -98,7 +98,7 @@ void Slave::run() {
  */
 void Slave::initialWork(MatrixXd input, int target) {
     
-    if (DBG) cout << endl <<"Remote >> mId:" << mId << " Task::initialWork" <<endl;
+    if (DBG) cout << endl <<"\tRemote >> mId:" << mId << " Task::initialWork" <<endl;
     
     dataVec.push_back(input);
     
@@ -131,7 +131,7 @@ void Slave::initialWork(MatrixXd input, int target) {
         result = input * gausssian;
     }
     
-    cout << endl << "Remote >> mId:" << mId << " InitialWork Sending result back";
+    cout << endl << "\tRemote >> mId:" << mId << " InitialWork Sending result back";
     if (DBG) cout << endl << "RESULT:" << endl << result << endl;
     MPI_Send(result.data(), result.size(), MPI_DOUBLE, MASTER_ID, Task::RETURN_TAG, mComm);
 }
@@ -142,7 +142,7 @@ void Slave::initialWork(MatrixXd input, int target) {
  */
 void Slave::basisMul(Eigen::MatrixXd basis) {
     
-    if (DBG) cout << endl <<"Remote >> mId:" << mId << " Task::basisMul" <<endl;
+    if (DBG) cout << endl <<"\tRemote >> mId:" << mId << " Task::basisMul" <<endl;
     
     MatrixXd result = MatrixXd::Zero(basis.cols(),basis.cols());
 
@@ -151,10 +151,10 @@ void Slave::basisMul(Eigen::MatrixXd basis) {
         result += temp * temp.transpose();
     }
 
-    cout << endl << "Remote >> mId:" << mId << " basisMul Sending result back";
+    cout << endl << "\tRemote >> mId:" << mId << " basisMul Sending result back";
     if (DBG) cout << endl << "RESULT:" << endl << result << endl;
     Global_sum(result, mId, mTotalProc, mComm);
-    cout << endl << "Remote >> mId:" << mId << " Finish Sending result back";
+    cout << endl << "\tRemote >> mId:" << mId << " Finish Sending result back";
 }
 
 /**
@@ -165,7 +165,7 @@ void Slave::calTensor(Eigen:: MatrixXd whiten) {
     
     int k = whiten.cols();
     
-    if (DBG) cout << endl <<"Remote >> mId:" << mId << " Task::calTensor" <<endl;
+    if (DBG) cout << endl <<"\tRemote >> mId:" << mId << " Task::calTensor" <<endl;
 
     MatrixXd ewx = MatrixXd::Zero(k, 1);
     D3Matrix<MatrixXd> wxTensor(k, k, k);
@@ -193,9 +193,9 @@ void Slave::calTensor(Eigen:: MatrixXd whiten) {
         result.middleCols(layer*k+1, k) = wxTensor.getLayer(layer);
     }
 
-    cout << endl << "Remote >> mId:" << mId << " calTensor Sending result back";
+    cout << endl << "\tRemote >> mId:" << mId << " calTensor Sending result back";
     Global_sum(result, mId, mTotalProc, MPI_COMM_WORLD);
-    cout << endl << "Remote >> mId:" << mId << " Finish Sending result back";
+    cout << endl << "\tRemote >> mId:" << mId << " Finish Sending result back";
 }
 
 int isPowerOfTwo (unsigned int x)
@@ -207,19 +207,19 @@ MatrixXd Slave::receiveMatrixFrom(int sender, int tag, long size[2]) {
     
     MPI_Status status;
     int dataSize;
-          cout << endl << "Remote >> mId:" << mId << " about to probe" << endl;
+    if(DBG) cout << endl << "\tRemote >> mId:" << mId << " about to probe" << endl;
     MPI_Probe(sender, tag, MPI_COMM_WORLD, &status);
     MPI_Get_count(&status, MPI_DOUBLE, &dataSize);
     
-    //cout << endl << "Remote >> mId:" << my_rank << " 1st round Global_sum:"<<dataSize << endl;
+    //cout << endl << "\tRemote >> mId:" << my_rank << " 1st round Global_sum:"<<dataSize << endl;
     
     vector<double> buffer(dataSize);
-    //cout << endl << "Remote >> mId:" << my_rank << " 1st round Global_sum Waiting "<<partner << endl;
+    //cout << endl << "\tRemote >> mId:" << my_rank << " 1st round Global_sum Waiting "<<partner << endl;
     
     //MPI_Irecv(&buffer[0], dataSize, MPI_DOUBLE, MASTER_ID, 1, MPI_COMM_WORLD, &request);
-        cout << endl << "Remote >> mId:" << mId << " prepare to receive    dataSize:" <<dataSize<< endl;
+    if(DBG) cout << endl << "\tRemote >> mId:" << mId << " prepare to receive    dataSize:" <<dataSize<< endl;
     MPI_Recv(&buffer[0], dataSize, MPI_DOUBLE, sender, tag, MPI_COMM_WORLD, &status);
-    cout << endl << "Remote >> mId:" << mId << " data received" << endl;
+    cout << endl << "\tRemote >> mId:" << mId << " data received" << endl;
     
     MatrixXd matrix = Map<MatrixXd>(&buffer[0], size[0], size[1]);
     
@@ -264,7 +264,7 @@ MatrixXd Slave::receiveMatrixFrom(int sender, int tag, long size[2]) {
  */
 MatrixXd Slave::Global_sum(MatrixXd myData, int my_rank, int nProc, MPI_Comm comm) {
     
-    cout << endl << "Remote >> mId:" << my_rank << " Global_sum!!"<< endl;
+    if(DBG) cout << endl << "\tRemote >> mId:" << my_rank << " Global_sum!!"<< endl;
     
     MatrixXd   sum = myData;
     int        partner;
@@ -289,7 +289,7 @@ MatrixXd Slave::Global_sum(MatrixXd myData, int my_rank, int nProc, MPI_Comm com
             MPI_Comm comm = MPI_COMM_WORLD;
             if (partner == MASTER_ID) comm = mComm;
             
-            cout << endl << "Remote >> mId:" << my_rank << "1st Global_sum Sending "<<partner << endl;
+            if (DBG_GLOBAL_SUM) cout << endl << "\tRemote >> mId:" << my_rank << "1st Global_sum Sending "<<partner << endl;
             MPI_Send(sum.data(), sum.size(), MPI_DOUBLE, partner, Task::TREESUM_TAG, comm);
             done = 1;
         }
@@ -299,7 +299,7 @@ MatrixXd Slave::Global_sum(MatrixXd myData, int my_rank, int nProc, MPI_Comm com
     while (!done && bitmask < nProc) {
         partner = my_rank ^ bitmask;
         
-         cout << endl << "Remote >> mId:" << my_rank << " Global_sum PARTNER is="<< partner << endl;
+         if (DBG_GLOBAL_SUM) cout << endl << "\tRemote >> mId:" << my_rank << " Global_sum PARTNER is="<< partner << endl;
         
         if (my_rank < partner) {
             long size[2] = {sum.rows(), sum.cols()};
@@ -310,16 +310,14 @@ MatrixXd Slave::Global_sum(MatrixXd myData, int my_rank, int nProc, MPI_Comm com
             
             MPI_Comm comm = MPI_COMM_WORLD;
             if (partner == MASTER_ID) comm = mComm;
-                
             
-            
-            cout << endl << "Remote >> mId:" << my_rank << " Global_sum Sending "<<partner << endl;
+            if (DBG_GLOBAL_SUM) cout << endl << "\tRemote >> mId:" << my_rank << " Global_sum Sending "<<partner << endl;
             MPI_Send(sum.data(), sum.size(), MPI_DOUBLE, partner, Task::TREESUM_TAG, comm);
             done = 1;
         }
     }
     
     /* Valid only on 0 */
-        cout << endl << "Remote >> mId:" << my_rank << " end Global_sum!!"<< endl;
+        cout << endl << "\tRemote >> mId:" << my_rank << " end Global_sum!!"<< endl;
     return sum;
 }  /* Global_sum */

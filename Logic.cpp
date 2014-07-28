@@ -6,6 +6,7 @@
 //  Copyright (c) 2014 Tse-Han Huang. All rights reserved.
 //
 
+#include <math.h>
 #include "Logic.h"
 
 
@@ -19,37 +20,31 @@ void Logic::start(MatrixXd X, int K, double noise) {
     cout << endl << endl << "[LOGIC] : START";
 
     changeWaitState(STATE_ACTIVE);
-    int64 t0 = GetTimeMs64();
+    mTime.push_back(GetTimeMs64());
     
-    int nDimension = X.rows();
-    
-    // TODO: How to decide p??
-    IndexType p = K + floor(nDimension/10)<100? floor(nDimension/10): 100;
-    if (p<nDimension) p = nDimension;
-    
+    IndexType p = decideP(K, X.rows());
     MatrixXd rpj = initialize(X, p);
-    int64 t1 = GetTimeMs64();
+    mTime.push_back(GetTimeMs64());
 
-    
     MatrixXd basis = calculateBasis(rpj, p);
-    int64 t2 = GetTimeMs64();
+    mTime.push_back(GetTimeMs64());
     if(PRINT_MATRIX) cout << endl << endl << "[LOGIC] : BASIS="  << basis << endl << endl;
     
     MatrixXd Z = computeZ(basis);
-    int64 t3 = GetTimeMs64();
+    mTime.push_back(GetTimeMs64());
     if(PRINT_MATRIX) cout << endl << endl << "[LOGIC] : Z=" << endl <<Z << endl << endl;
     
     MatrixXd W = calculateWhiten(Z, basis, K, X.cols());
-    int64 t4 = GetTimeMs64();
+    mTime.push_back(GetTimeMs64());
     if(PRINT_MATRIX) cout << endl << endl << "[LOGIC] : W=" << endl << W << endl;
     
-    //afterWhiten( X, W, K, noise);
     D3Matrix<MatrixXd> T = buildTensor( X, W, K, noise);
-    int64 t5 = GetTimeMs64();
+    mTime.push_back(GetTimeMs64());
     
     tensorDecompose(T, W);
-    int64 t6 = GetTimeMs64();
+    mTime.push_back(GetTimeMs64());
     
+    /*
     if (TIME_MEASURE) {
         cout << endl <<  endl <<"******************** TIME MEASUREMENT *******************";
         cout << endl <<  "* Time: S1 Random Projection (Distributed)\t  " << (t1-t0) <<"\t*";
@@ -61,52 +56,51 @@ void Logic::start(MatrixXd X, int K, double noise) {
         cout << endl <<  "* Time: TOTAL time consumption\t\t\t  " << (t6-t0) << "\t*";
         cout << endl <<"*********************************************************" << endl;
     }
-     
+    */
 }
 
-
-// Split data and send to slave for random projection
+// Split the data and send to slaves for random projection
 // parameter:X data
 // parameter:nTarget    the column size we want to shrink to
 MatrixXd Logic::initialize(MatrixXd X, int nTarget) {
 
-    // TODO: how to decide number of chunk??
-    int nChunk = mDispatcher->nProc()-1;
     int nDimension = X.rows();
+    int nChunk = decideChunks(X);
     
-    int blk = X.cols() / nChunk;
-    for (int i=0; i<nChunk-1; i++) {
-        mChunkVec.push_back(ChunkInfo(i*blk, (i+1)*blk));
-    }
-    mChunkVec.push_back(ChunkInfo((nChunk-1)*blk, X.cols()));
+    cout << endl << "[LOGIC] : Data Dimension : " << X.rows() << " * " << X.cols();
+    cout << "  Size:" << X.size()*sizeof(DataType)/(1000*1000) << "M  nChunk:" << nChunk;
     
-    
-    IndexType retSize[2] = {nDimension, nTarget};
-    
-    
+    // Assign callback function
     Callback* callback;
-    
-    if (mDispatcher->withDistSvd()) callback = new EdoLibertyCallback(retSize, nChunk, this, &Logic::initialize_cb);
+    IndexType retSize[2] = {nDimension, nTarget};
+    if (mDispatcher->withDistSvd()) {
+        callback = new EdoLibertyCallback(retSize, nChunk, this, &Logic::initialize_cb);
+    }
     else callback = new Callback(retSize, nChunk, this, &Logic::initialize_cb);
     
-    changeWaitState(STATE_WAIT);
-    
+    // Splitting data
     vector<TaskParcel> vec;
+    int blkCols = X.cols() / nChunk;
     for (int i=0; i<nChunk; i++) {
-        IndexType nCol = mChunkVec.at(i).end() - mChunkVec.at(i).start();
+        // Record the chunk info
+        if (i!=nChunk-1) mChunkVec.push_back(ChunkInfo(i*blkCols, (i+1)*blkCols));
+        else mChunkVec.push_back(ChunkInfo(i*blkCols, X.cols()));
+
+        int nCol = mChunkVec.at(i).end() - mChunkVec.at(i).start();
         IndexType size[2] = {nDimension, nCol};
         Task task(Task::INITIAL, size, nTarget, ++serialNum);
-        TaskParcel tp(task, X.middleCols(mChunkVec.at(i).start(), nCol), callback);
+        TaskParcel tp(task, X.middleCols(i*blkCols, nCol), callback);
         vec.push_back(tp);
     }
     mDispatcher->submit(vec);
-    
-    cout << endl << "[LOGIC] : STATE_1  START TO WAIT";
+
+    changeWaitState(STATE_WAIT);
+    cout << endl << "[LOGIC] : STATE_1 START TO WAIT";
     {
         std::unique_lock<std::mutex> lock(mState_mutex);
         mState_condition.wait(lock);
     }
-    cout << endl << "[LOGIC] : STATE_1  FINISH WAITING";
+    cout << endl << "[LOGIC] : STATE_1 FINISH WAITING";
 
     MatrixXd result = callback->result();
     delete callback;
@@ -120,44 +114,29 @@ void Logic::initialize_cb() {
     mState_condition.notify_one();
 }
 
-// TODO: shoud I use svd instead?
 MatrixXd Logic::calculateBasis(MatrixXd rpj, int nBasis) {
-    
     
     cout << endl << "[LOGIC] : STATE_2 CALCULATE BASIS";
     
-
     const JacobiSVD<MatrixXd> svd(rpj, ComputeThinU | ComputeThinV);
     MatrixXd Ub = svd.matrixU();
-    
 
     return Ub;
-    
-    
-    /*
-    HouseholderQR<MatrixXd> qr(rpj);
-    MatrixXd Q = MatrixXd::Identity(rpj.rows(), nBasis);
-    Q = qr.householderQ() * Q;
-
-    return Q;
-    */
 }
 
 // Send basis to every slave and aggregate the result after multiplication
 MatrixXd Logic::computeZ(MatrixXd basis) {
 
     IndexType retSize[2] = {basis.cols(), basis.cols()};
-    
-    // TODO 2=nprocess
     Callback* callback = new Callback(retSize, 1, this, &Logic::computeZ_cb);
-    changeWaitState(STATE_WAIT);
-
+    
     // TODO: check if this is useless??
     IndexType  size[2] = {basis.cols(), basis.cols()};
     Task task(Task::BASIS_MUL, size, 0, ++serialNum);
     TaskParcel tp(task, basis, callback);
     mDispatcher->submit(tp);
 
+    changeWaitState(STATE_WAIT);
     cout << endl << "[LOGIC] : STATE_3  START TO WAIT";
     {
         std::unique_lock<std::mutex> lock(mState_mutex);
@@ -397,5 +376,42 @@ void Logic::finish() {
 void Logic::changeWaitState(int state) {
     std::unique_lock<std::mutex> lock(mState_mutex);
     mWait = state;
+}
+
+
+string Logic::getTimeDetail() {
+    
+    string result;
+    
+    result = "\n\n******************** TIME MEASUREMENT *******************";
+    result = result +  "\n* Time: S1 Random Projection (Distributed)\t  " + to_string(mTime[1]-mTime[0]) +"\t*";
+    result = result +  "\n* Time: S2 Calculate Basis (Only master)\t  " + to_string(mTime[2]-mTime[1]) +"\t*";
+    result = result +  "\n* Time: S3 Basis Multiplication (Distributed)\t  " + to_string(mTime[3]-mTime[2]) +"\t*";
+    result = result +  "\n* Time: S4 Calculate Whiten Matrix (Only master)  " + to_string(mTime[4]-mTime[3]) +"\t*";
+    result = result +  "\n* Time: S5 Tensor Building (Distributed)\t  " + to_string(mTime[5]-mTime[4]) +"\t*";
+    result = result +  "\n* Time: S6 Tensor Decomposition (Only master)\t  " + to_string(mTime[6]-mTime[5]) +"\t*";
+    result = result +  "\n* Time: TOTAL time consumption\t\t\t  " + to_string(mTime[6]-mTime[0]) + "\t*";
+    result = result +  "\n*********************************************************\n";
+    
+    return result;
+}
+
+// Calculate the number of chunks we should split the original data
+// Round up to the nearest factor of nSlave
+int Logic::decideChunks(MatrixXd X) {
+    
+    int nSlave = mDispatcher->nProc()-1;
+    int nRawChunk = (X.size()*sizeof(DataType)/MAX_CHUNK)+1;
+    
+    // Round up to the factor of nSlave
+    int nChunk = ceil((double)nRawChunk/nSlave) * nSlave;
+    return nChunk;
+}
+
+IndexType Logic::decideP(int K, int dimension) {
+    
+    IndexType p = K>1000? K+100: K*1.1;
+    if (p<dimension) p = dimension;
+    return p;
 }
 
